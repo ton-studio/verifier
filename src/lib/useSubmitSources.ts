@@ -9,8 +9,9 @@ import { AnalyticsAction, sendAnalyticsEvent } from "./googleAnalytics";
 import create from "zustand";
 import { useLoadVerifierRegistryInfo } from "./useLoadVerifierRegistryInfo";
 import { useTonAddress } from "@tonconnect/ui-react";
+import { useIsTestnet } from "../components/TestnetBar";
 
-export function randomFromArray<T>(arr: T[]) {
+export function randomFromArray<T>(arr: readonly T[]) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
@@ -35,9 +36,45 @@ function jsonToBlob(json: Record<string, any>): Blob {
   });
 }
 
-export const backends: string[] = window.isTestnet
-  ? import.meta.env.VITE_BACKEND_URL_TESTNET!.split(",")
-  : import.meta.env.VITE_BACKEND_URL!.split(",");
+type VerifierConfig = {
+  backendUrls: string[];
+};
+
+const testnetVerifiers: Record<string, VerifierConfig> = {
+  "orbs-testnet": {
+    backendUrls: ["https://ton-source-prod-testnet-1.herokuapp.com"],
+  },
+  "verifier.ton.org": {
+    backendUrls: ["http://localhost:3003"],
+  },
+};
+
+const mainnetVerifiers: Record<string, VerifierConfig> = {
+  "verifier.ton.org": {
+    backendUrls: [
+      "http://localhost:3004",
+      "http://localhost:3005",
+      "http://localhost:3006",
+      "http://localhost:4000",
+    ],
+  },
+  "orbs.com": {
+    backendUrls: [
+      "https://ton-source-prod-1.herokuapp.com",
+      "https://ton-source-prod-2.herokuapp.com",
+      "https://ton-source-prod-3.herokuapp.com",
+    ],
+  },
+};
+
+export function useBackends(verifier: string): Readonly<string[]> {
+  const isTestnet = useIsTestnet();
+  return (
+    (isTestnet
+      ? testnetVerifiers[verifier]?.backendUrls
+      : mainnetVerifiers[verifier]?.backendUrls) ?? []
+  );
+}
 
 const useSubmitSourcesStatusStore = create<{
   status: string | null;
@@ -49,7 +86,7 @@ const useSubmitSourcesStatusStore = create<{
   clear: () => set({ status: null }),
 }));
 
-export function useSubmitSources() {
+export function useSubmitSources(verifier: string = "verifier.ton.org") {
   const { contractAddress } = useContractAddress();
   const { data: contractInfo } = useLoadContractInfo();
   const { hasFiles, files } = useFileStore();
@@ -58,7 +95,8 @@ export function useSubmitSources() {
   const { clear, setStatus, status } = useSubmitSourcesStatusStore();
   const { data: verifierRegistryData } = useLoadVerifierRegistryInfo();
 
-  const verifierRegistryConfig = verifierRegistryData?.find((v) => v.name === window.verifierId);
+  const verifierRegistryConfig = verifierRegistryData?.find((v) => v.name === verifier);
+  const backends = useBackends(verifier);
 
   const mutation = useCustomMutation(["submitSources"], async () => {
     if (!contractAddress) return;

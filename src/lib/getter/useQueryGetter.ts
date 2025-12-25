@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { Address, Cell, fromNano } from "ton";
-import { getClient } from "../getClient";
+import { useClient } from "../useClient";
 import { sendAnalyticsEvent, AnalyticsAction } from "../googleAnalytics";
 import { makeGetCall } from "../makeGetCall";
 import { useContractAddress } from "../useContractAddress";
@@ -14,11 +14,12 @@ export type GetterResponseValue = { type: PossibleRepresentation; value: string 
 export function useQueryGetter(getter: StateGetter) {
   const { contractAddress } = useContractAddress();
   const { getters } = useGetters();
+  const tc = useClient();
 
   return useMutation([contractAddress, "getter", getter.name], async () => {
-    const tc = await getClient();
     if (!contractAddress) return;
     if (!getters) return;
+    if (!tc) return;
 
     sendAnalyticsEvent(AnalyticsAction.RUN_GETTER);
 

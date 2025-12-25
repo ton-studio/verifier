@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { randomFromArray, backends } from "./useSubmitSources";
+import { randomFromArray, useBackends } from "./useSubmitSources";
 
 export function useLoadLatestVerified() {
+  const backends = useBackends("verifier.ton.org");
   const backend = randomFromArray(backends);
 
   const { isLoading, error, data } = useQuery(["latestVerifiedContracts"], async () => {

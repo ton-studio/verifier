@@ -1,7 +1,7 @@
 import { Address, Cell, StateInit, toNano, contractAddress } from "ton";
-import { getClient } from "../../lib/getClient";
+import { useClient } from "../../lib/useClient";
 import { useSendTXN } from "../../lib/useSendTxn";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Box, CircularProgress, Skeleton, useMediaQuery, useTheme } from "@mui/material";
@@ -21,7 +21,7 @@ import { useFileStore } from "../../lib/useFileStore";
 import { usePreload } from "../../lib/useResetState";
 import { CustomValueInput } from "./TactDeployer.styled";
 import { useNavigatePreserveQuery } from "../../lib/useNavigatePreserveQuery";
-import { TestnetBar } from "../TestnetBar";
+import { TestnetBar, useIsTestnet } from "../TestnetBar";
 
 const deployableTraitInitMessage = Cell.fromBoc(
   Buffer.from("te6cckEBAQEADgAAGJRqmLYAAAAAAAAAAOnNeQ0=", "base64"),
@@ -32,46 +32,58 @@ async function fetchFromIpfs(hash: string) {
   return fetch(`${IPFS_GW}/ipfs/${hash}`);
 }
 
-function useTactDeployer({ workchain }: { workchain: 0 | -1 }) {
+function useTactDeployer({
+  workchain,
+  verifier = "verifier.ton.org",
+}: {
+  workchain: 0 | -1;
+  verifier?: string;
+}) {
   const { ipfsHash } = useParams();
+  const tc = useClient();
+  const isTestnet = useIsTestnet();
 
-  const { data, error, isLoading } = useQuery(["tactDeploy", ipfsHash], async () => {
-    if (!ipfsHash) return null;
-    const tc = await getClient();
-    const content = await fetchFromIpfs(ipfsHash).then((res) => res.json());
-    const pkg = await fetchFromIpfs(content.pkg).then((res) => res.json());
-    const dataCell = await fetchFromIpfs(content.dataCell)
-      .then((res) => res.arrayBuffer())
-      .then((buf) => Cell.fromBoc(Buffer.from(buf))[0]);
+  const { data, error, isLoading } = useQuery({
+    enabled: !!tc && !!ipfsHash,
+    queryKey: ["tactDeploy", ipfsHash, isTestnet],
+    queryFn: async () => {
+      if (!ipfsHash || !tc) return null;
+      const content = await fetchFromIpfs(ipfsHash).then((res) => res.json());
+      const pkg = await fetchFromIpfs(content.pkg).then((res) => res.json());
+      const dataCell = await fetchFromIpfs(content.dataCell)
+        .then((res) => res.arrayBuffer())
+        .then((buf) => Cell.fromBoc(Buffer.from(buf))[0]);
 
-    const codeCell = Cell.fromBoc(Buffer.from(pkg.code, "base64"))[0];
-    const address = contractAddress(workchain, { code: codeCell, data: dataCell });
-    const stateInit = { code: codeCell, data: dataCell };
+      const codeCell = Cell.fromBoc(Buffer.from(pkg.code, "base64"))[0];
+      const address = contractAddress(workchain, { code: codeCell, data: dataCell });
+      const stateInit = { code: codeCell, data: dataCell };
 
-    const dataCellHash = dataCell.hash().toString("base64");
-    const codeCellHash = codeCell.hash().toString("base64");
+      const dataCellHash = dataCell.hash().toString("base64");
+      const codeCellHash = codeCell.hash().toString("base64");
 
-    const isDeployed = await tc.isContractDeployed(address);
-    const hasProof = isDeployed && (await getProofIpfsLink(codeCellHash));
+      const isDeployed = await tc.isContractDeployed(address);
+      const hasProof = isDeployed && (await getProofIpfsLink(codeCellHash, verifier, isTestnet));
 
-    return {
-      address,
-      stateInit,
-      pkg,
-      codeCellHash,
-      dataCellHash,
-      isDeployed,
-      hasProof,
-    };
+      return {
+        address,
+        stateInit,
+        pkg,
+        codeCellHash,
+        dataCellHash,
+        isDeployed,
+        hasProof,
+      };
+    },
   });
 
   return { data, error, isLoading };
 }
 
 function useDeployContract(value: string, stateInit?: StateInit, address?: Address) {
+  const tc = useClient();
   const { sendTXN, data, clearTXN } = useSendTXN("deployContract", async (count: number) => {
+    if (!tc) throw new Error("No client");
     if (!address) throw new Error("No address");
-    const tc = await getClient();
 
     // TODO move to generic function
     if (count > 20) {
@@ -286,10 +298,11 @@ export function TactDeployer() {
   const headerSpacings = useMediaQuery(theme.breakpoints.down("lg"));
 
   const { data, error, isLoading } = useTactDeployer({ workchain: 0 });
+  const isTestnet = useIsTestnet();
 
   return (
     <Box>
-      {window.isTestnet && <TestnetBar />}
+      {isTestnet && <TestnetBar />}
       <TopBar />
       <ContentBox px={headerSpacings ? "20px" : 0}>
         {isLoading && (

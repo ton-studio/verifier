@@ -6,14 +6,20 @@ import { useSendTXN } from "./useSendTxn";
 import { AnalyticsAction, sendAnalyticsEvent } from "./googleAnalytics";
 import { useEffect } from "react";
 import { useLoadSourcesRegistryInfo } from "./useLoadSourcesRegistryInfo";
+import { useIsTestnet } from "../components/TestnetBar";
 
-export function usePublishProof() {
+export function usePublishProof(verifierId: string) {
   const { data: submitSourcesData } = useSubmitSources();
   const { data: contractInfo } = useLoadContractInfo();
   const { data: sourcesRegistryData } = useLoadSourcesRegistryInfo();
+  const isTestnet = useIsTestnet();
 
   const { sendTXN, data, clearTXN } = useSendTXN("publishProof", async (count: number) => {
-    const ipfsLink = await getProofIpfsLink(contractInfo!.codeCellToCompileBase64);
+    const ipfsLink = await getProofIpfsLink(
+      contractInfo!.codeCellToCompileBase64,
+      verifierId,
+      isTestnet,
+    );
 
     if (count > 20) {
       return "error";

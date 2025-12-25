@@ -15,7 +15,7 @@ import { AppButton } from "./AppButton";
 
 export function PublishProof() {
   const { data } = useSubmitSources();
-  const { sendTXN, status, clearTXN } = usePublishProof();
+  const { sendTXN, status, clearTXN } = usePublishProof("verifier.ton.org");
   const { step, toggleSection, currentSection } = usePublishStore();
   const { reset: resetFiles } = useFileStore();
 

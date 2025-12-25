@@ -5,6 +5,7 @@ import "@ton-community/contract-verifier-sdk";
 import { SourcesData } from "@ton-community/contract-verifier-sdk";
 import { useContractAddress } from "./useContractAddress";
 import { usePublishProof } from "./usePublishProof";
+import { useIsTestnet } from "../components/TestnetBar";
 
 export const toSha256Buffer = (s: string) => {
   const sha = new Sha256();
@@ -12,17 +13,23 @@ export const toSha256Buffer = (s: string) => {
   return Buffer.from(sha.digestSync());
 };
 
-export async function getProofIpfsLink(hash: string): Promise<string | null> {
+export async function getProofIpfsLink(
+  hash: string,
+  verifierId: string,
+  isTestnet: boolean,
+): Promise<string | null> {
   return ContractVerifier.getSourcesJsonUrl(hash, {
-    verifier: window.verifierId,
-    testnet: window.isTestnet,
+    verifier: verifierId,
+    testnet: isTestnet,
   });
 }
 
-export function useLoadContractProof() {
+export function useLoadContractProof(verifier: string = "verifier.ton.org") {
   const { contractAddress } = useContractAddress();
   const { data: contractInfo, error: contractError } = useLoadContractInfo();
-  const { status: publishProofStatus } = usePublishProof();
+  const { status: publishProofStatus } = usePublishProof(verifier);
+  const isTestnet = useIsTestnet();
+
   const { isLoading, error, data, refetch } = useQuery<
     Partial<SourcesData> & {
       hasOnchainProof: boolean;
@@ -36,14 +43,18 @@ export function useLoadContractProof() {
         };
       }
 
-      const ipfsLink = await getProofIpfsLink(contractInfo!.codeCellToCompileBase64);
+      const ipfsLink = await getProofIpfsLink(
+        contractInfo!.codeCellToCompileBase64,
+        verifier,
+        isTestnet,
+      );
 
       if (!ipfsLink) {
         return { hasOnchainProof: false, ipfsLink };
       }
 
       const sourcesData = await ContractVerifier.getSourcesData(ipfsLink, {
-        testnet: window.isTestnet,
+        testnet: isTestnet,
         ipfsConverter: (ipfsUrl: string, testnet: boolean) => {
           let endpoint = "https://gateway.pinata.cloud/ipfs/";
           return ipfsUrl.replace("ipfs://", endpoint);
