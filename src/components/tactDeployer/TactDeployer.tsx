@@ -28,7 +28,7 @@ const deployableTraitInitMessage = Cell.fromBoc(
 )[0];
 
 async function fetchFromIpfs(hash: string) {
-  const IPFS_GW = `https://tact-deployer${window.isTestnet ? "-testnet" : ""}.infura-ipfs.io`;
+  const IPFS_GW = `https://gateway.pinata.cloud`;
   return fetch(`${IPFS_GW}/ipfs/${hash}`);
 }
 

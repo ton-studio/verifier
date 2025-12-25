@@ -44,6 +44,10 @@ export function useLoadContractProof() {
 
       const sourcesData = await ContractVerifier.getSourcesData(ipfsLink, {
         testnet: window.isTestnet,
+        ipfsConverter: (ipfsUrl: string, testnet: boolean) => {
+          let endpoint = "https://gateway.pinata.cloud/ipfs/";
+          return ipfsUrl.replace("ipfs://", endpoint);
+        },
       });
       return {
         hasOnchainProof: true,
