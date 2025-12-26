@@ -13,9 +13,15 @@ import { CircularProgress, Fade } from "@mui/material";
 import { useFileStore } from "../lib/useFileStore";
 import { AppButton } from "./AppButton";
 
-export function PublishProof() {
-  const { data } = useSubmitSources();
-  const { sendTXN, status, clearTXN } = usePublishProof("verifier.ton.org");
+export function PublishProof({
+  contractAddress,
+  verifier,
+}: {
+  contractAddress: string;
+  verifier: string;
+}) {
+  const { data } = useSubmitSources(contractAddress, verifier);
+  const { sendTXN, status, clearTXN } = usePublishProof(contractAddress, verifier);
   const { step, toggleSection, currentSection } = usePublishStore();
   const { reset: resetFiles } = useFileStore();
 

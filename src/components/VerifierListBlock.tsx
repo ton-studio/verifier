@@ -1,24 +1,46 @@
-import { Box, Skeleton, Typography, useTheme, useMediaQuery } from "@mui/material";
+import { Box, Skeleton, Typography, useTheme, useMediaQuery, styled } from "@mui/material";
 import React from "react";
 import { useLoadVerifierRegistryInfo } from "../lib/useLoadVerifierRegistryInfo";
-import { CenteringBox, DataBox, IconBox, TitleBox, TitleText } from "./Common.styled";
-import verified from "../assets/verified-light.svg";
+import { CenteringBox } from "./Common.styled";
+import { CopyHash } from "./CopyHash";
+import { DataBlock, DataRowItem } from "./DataBlock";
+import { VerifierWithId } from "../lib/wrappers/verifier-registry";
+import verificationIcon from "../assets/verification-popup.svg";
 
-const VerifierCard = ({ title, children }: { title: string; children: React.ReactNode }) => {
+const VerifierCard = ({ verifierId, config }: { verifierId: string; config: VerifierWithId }) => {
+  const dataRows: DataRowItem[] = [
+    {
+      title: "Verifier ID",
+      value: <CopyHash value={verifierId} maxSize={36} />,
+    },
+    { title: "URL", value: config.url },
+    { title: "Admin", value: config.admin.toString(), showIcon: true },
+    { title: "Quorum", value: String(config.quorum) },
+    {
+      title: "Endpoints",
+      value: (
+        <>
+          {Object.entries(config.pubKeyEndpoints).map(([pubKey, endpoint]) => (
+            <Typography key={pubKey} sx={{ fontSize: 13, color: "#4A4C4F" }}>
+              {endpoint} <CopyHash value={pubKey} />
+            </Typography>
+          ))}
+        </>
+      ),
+    },
+  ];
+
   return (
-    <Box
-      sx={{
-        border: "1px solid rgba(114, 138, 150, 0.24)",
-        borderRadius: 12,
-        padding: 2,
-        minWidth: 250,
-        flex: 1,
-      }}>
-      <Typography sx={{ fontWeight: 700, fontSize: 16, mb: 1 }}>{title}</Typography>
-      {children}
-    </Box>
+    <DataBlock title={config.name} icon={verificationIcon} dataRows={dataRows} isFlexibleWrapper />
   );
 };
+
+const ContractsWrapper = styled(Box)(({ theme }) => ({
+  maxWidth: 1160,
+  width: "calc(100% - 50px)",
+  paddingTop: 20,
+  margin: "0 auto",
+}));
 
 export function VerifierListBlock() {
   const { data, isLoading } = useLoadVerifierRegistryInfo();
@@ -28,52 +50,24 @@ export function VerifierListBlock() {
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("md"));
 
   return (
-    <DataBox>
-      <TitleBox mb={2}>
-        <CenteringBox sx={{ width: "100%", justifyContent: "flex-start" }}>
-          <IconBox>
-            <img src={verified} alt="Verifier icon" width={41} height={41} />
-          </IconBox>
-          <TitleText>Supported verifiers</TitleText>
-        </CenteringBox>
-      </TitleBox>
+    <ContractsWrapper>
+      <Typography variant="h6">
+        <b>Verifiers</b>
+      </Typography>
       {isLoading && !hasVerifiers && (
         <Box>
           <Skeleton variant="rectangular" height={80} sx={{ borderRadius: 2, mb: 2 }} />
-          <Skeleton variant="rectangular" height={80} sx={{ borderRadius: 2 }} />
         </Box>
       )}
       {hasVerifiers ? (
         <Box
           sx={{
             display: "flex",
-            flexDirection: isSmallScreen ? "column" : "row",
-            flexWrap: "wrap",
+            flexDirection: "row",
             gap: 2,
           }}>
           {verifiers.map(([id, config]) => (
-            <VerifierCard key={id} title={config.name}>
-              <Typography sx={{ fontSize: 14, color: "#4A4C4F" }}>
-                <b>ID:</b> {id}
-              </Typography>
-              <Typography sx={{ fontSize: 14, color: "#4A4C4F" }}>
-                <b>URL:</b> {config.url}
-              </Typography>
-              <Typography sx={{ fontSize: 14, color: "#4A4C4F" }}>
-                <b>Admin:</b> {config.admin.toString()}
-              </Typography>
-              <Typography sx={{ fontSize: 14, color: "#4A4C4F" }}>
-                <b>Quorum:</b> {config.quorum}
-              </Typography>
-              <Box sx={{ mt: 1 }}>
-                <Typography sx={{ fontSize: 14, fontWeight: 600 }}>Endpoints</Typography>
-                {Object.entries(config.pubKeyEndpoints).map(([pubKey, endpoint]) => (
-                  <Typography key={pubKey} sx={{ fontSize: 13, color: "#4A4C4F" }}>
-                    {endpoint} ({pubKey.slice(0, 6)}…)
-                  </Typography>
-                ))}
-              </Box>
-            </VerifierCard>
+            <VerifierCard key={id} verifierId={id} config={config} />
           ))}
         </Box>
       ) : (
@@ -85,6 +79,6 @@ export function VerifierListBlock() {
           </CenteringBox>
         )
       )}
-    </DataBox>
+    </ContractsWrapper>
   );
 }

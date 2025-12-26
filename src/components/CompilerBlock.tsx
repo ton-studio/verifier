@@ -1,33 +1,47 @@
 import compilerIcon from "../assets/compiler.svg";
 import { DataBlock, DataRowItem } from "./DataBlock";
-import { useLoadContractProof } from "../lib/useLoadContractProof";
-
+import {
+  findProofByVerifierName,
+  getFirstAvailableProof,
+  useLoadContractProof,
+} from "../lib/useLoadContractProof";
 import TimeAgo from "javascript-time-ago";
 import en from "javascript-time-ago/locale/en";
-import { funcVersionToLink, fiftVersionToLink, tactVersionToLink, tolkVersionToLink, dropPatchVersionZero } from "../utils/linkUtils";
+import {
+  funcVersionToLink,
+  fiftVersionToLink,
+  tactVersionToLink,
+  tolkVersionToLink,
+  dropPatchVersionZero,
+} from "../utils/linkUtils";
 import {
   FiftCliCompileSettings,
   FuncCompilerSettings,
   TactCliCompileSettings,
   TolkCliCompileSettings,
 } from "@ton-community/contract-verifier-sdk";
+import { useLoadVerifierRegistryInfo } from "../lib/useLoadVerifierRegistryInfo";
 
 TimeAgo.addDefaultLocale(en);
 
 export function CompilerBlock() {
-  const { data } = useLoadContractProof();
+  const { data: proofs } = useLoadContractProof();
+  const { data: verifierRegistry } = useLoadVerifierRegistryInfo();
+  const proof =
+    findProofByVerifierName(proofs, verifierRegistry, "verifier.ton.org") ??
+    getFirstAvailableProof(proofs);
 
-  const compilerSettings = data!.compilerSettings;
+  const compilerSettings = proof?.compilerSettings;
 
   const dataRows: DataRowItem[] = [];
 
-  if (data) {
+  if (proof) {
     dataRows.push({
       title: "Compiler",
-      value: `${data!.compiler!}`,
+      value: `${proof.compiler ?? ""}`,
     });
 
-    if (data.compiler === "func") {
+    if (proof.compiler === "func") {
       const funcVersion = (compilerSettings as FuncCompilerSettings)?.funcVersion;
       dataRows.push({
         title: "Version",
@@ -35,7 +49,7 @@ export function CompilerBlock() {
         color: "#0088CC",
         customLink: funcVersion && funcVersionToLink(funcVersion),
       });
-    } else if (data.compiler === "fift") {
+    } else if (proof.compiler === "fift") {
       const fiftVersion = (compilerSettings as FiftCliCompileSettings)?.fiftVersion;
       dataRows.push({
         title: "Version",
@@ -43,7 +57,7 @@ export function CompilerBlock() {
         color: "#0088CC",
         customLink: fiftVersionToLink(fiftVersion),
       });
-    } else if (data.compiler === "tact") {
+    } else if (proof.compiler === "tact") {
       const tactVersion = (compilerSettings as TactCliCompileSettings)?.tactVersion;
       dataRows.push({
         title: "Version",
@@ -51,27 +65,26 @@ export function CompilerBlock() {
         color: "#0088CC",
         customLink: tactVersionToLink(tactVersion),
       });
-    } else if (data.compiler === "tolk") {
-        const tolkVersion = (compilerSettings as TolkCliCompileSettings)?.tolkVersion;
-          dataRows.push({
-            title: "Version",
-            value: dropPatchVersionZero(tolkVersion),
-            color: "#0088CC",
-            customLink: tolkVersionToLink(tolkVersion),
-          });
+    } else if (proof.compiler === "tolk") {
+      const tolkVersion = (compilerSettings as TolkCliCompileSettings)?.tolkVersion;
+      dataRows.push({
+        title: "Version",
+        value: dropPatchVersionZero(tolkVersion),
+        color: "#0088CC",
+        customLink: tolkVersionToLink(tolkVersion),
+      });
     }
-    if (data.compiler == "func") {
+    if (proof.compiler === "func") {
       dataRows.push({
         title: "Command",
-        // @ts-ignore
-        value: compilerSettings?.commandLine,
+        value: (compilerSettings as FuncCompilerSettings)?.commandLine,
         showIcon: true,
         tooltip: true,
       });
     }
     dataRows.push({
       title: "Verified on",
-      value: data.verificationDate?.toLocaleDateString() ?? "",
+      value: proof.verificationDate?.toLocaleDateString() ?? "",
     });
   }
 

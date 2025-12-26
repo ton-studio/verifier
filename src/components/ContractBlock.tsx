@@ -3,7 +3,7 @@ import { useContractAddress } from "../lib/useContractAddress";
 import { useLoadContractInfo } from "../lib/useLoadContractInfo";
 import contractIcon from "../assets/contract.svg";
 import { DataBlock, DataRowItem } from "./DataBlock";
-import { useLoadContractProof } from "../lib/useLoadContractProof";
+import { hasAnyOnchainProof, useLoadContractProof } from "../lib/useLoadContractProof";
 import { workchainForAddress } from "../lib/workchainForAddress";
 import { formatBalance } from "../utils/numberUtils";
 import { useEffect } from "react";
@@ -102,7 +102,7 @@ export function ContractBlock() {
       icon={contractIcon}
       dataRows={dataRows}
       isLoading={isLoading}
-      isFlexibleWrapper={!!proofData?.hasOnchainProof}
+      isFlexibleWrapper={hasAnyOnchainProof(proofData)}
     />
   );
 }

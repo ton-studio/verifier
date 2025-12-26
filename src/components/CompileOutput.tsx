@@ -52,8 +52,8 @@ export const ErrorRowValue = styled(DataRowValue)({
   fontWeight: 400,
 });
 
-export function CompileOutput() {
-  const { data: submitSourcesData, error } = useSubmitSources();
+export function CompileOutput({ contractAddress }: { contractAddress: string }) {
+  const { data: submitSourcesData, error } = useSubmitSources(contractAddress);
   const { data: contractInfoData } = useLoadContractInfo();
 
   const compileResult = submitSourcesData?.result?.compileResult;

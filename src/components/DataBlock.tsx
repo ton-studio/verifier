@@ -14,7 +14,7 @@ import {
 
 export interface DataRowItem {
   title: string;
-  value?: string;
+  value?: React.ReactNode | string;
   showIcon?: boolean;
   color?: string;
   customLink?: string;
@@ -32,7 +32,7 @@ interface DataBlockProps {
 }
 
 const renderRowValue = (
-  value?: string,
+  value?: React.ReactNode,
   customLink?: string,
   withTooltip?: boolean,
   subtitle?: string,
@@ -101,7 +101,7 @@ export function DataBlock({ isFlexibleWrapper, icon, title, dataRows, isLoading 
                 </DataRowValue>
                 {showIcon && (
                   <IconsWrapper>
-                    {value && (
+                    {value && typeof value === "string" && (
                       <IconButton sx={{ padding: 0 }} onClick={() => onCopy(value)}>
                         <img src={copy} alt="Copy icon" width={15} height={15} />
                       </IconButton>

@@ -1,11 +1,13 @@
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Sha256 } from "@aws-crypto/sha256-js";
 import { useLoadContractInfo } from "./useLoadContractInfo";
 import "@ton-community/contract-verifier-sdk";
 import { SourcesData } from "@ton-community/contract-verifier-sdk";
 import { useContractAddress } from "./useContractAddress";
-import { usePublishProof } from "./usePublishProof";
 import { useIsTestnet } from "../components/TestnetBar";
+import { useLoadVerifierRegistryInfo } from "./useLoadVerifierRegistryInfo";
+import { VerifierWithId } from "./wrappers/verifier-registry";
 
 export const toSha256Buffer = (s: string) => {
   const sha = new Sha256();
@@ -15,19 +17,20 @@ export const toSha256Buffer = (s: string) => {
 
 export async function getProofIpfsLink(
   hash: string,
-  verifierId: string,
+  verifier: string,
   isTestnet: boolean,
 ): Promise<string | null> {
   return ContractVerifier.getSourcesJsonUrl(hash, {
-    verifier: verifierId,
+    verifier,
     testnet: isTestnet,
   });
 }
 
-type UseLoadContractProofArgs = {
-  contractAddress?: string | null;
-  verifier?: string;
+export type ContractProofData = Partial<SourcesData> & {
+  hasOnchainProof: boolean;
 };
+
+export type ContractProofMap = Map<string, ContractProofData>;
 
 export async function loadProofData(
   codeCellHashBase64: string,
@@ -53,43 +56,68 @@ export async function loadProofData(
   };
 }
 
-export function useLoadContractProof({
-  contractAddress: overrideAddress,
-  verifier = "verifier.ton.org",
-}: UseLoadContractProofArgs = {}) {
-  const { contractAddress: defaultAddress } = useContractAddress();
-  const contractAddress = overrideAddress ?? defaultAddress;
+export function hasAnyOnchainProof(proofs: ContractProofMap | undefined) {
+  if (!proofs) return false;
+  for (const proof of proofs.values()) {
+    if (proof.hasOnchainProof) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export function findProofByVerifierName(
+  proofs: ContractProofMap | undefined,
+  registry: Record<string, VerifierWithId> | undefined,
+  verifierName: string,
+) {
+  if (!proofs || !registry) return undefined;
+  const match = Object.entries(registry).find(([, config]) => config.name === verifierName);
+  if (!match) return undefined;
+  return proofs.get(match[0]);
+}
+
+export function getFirstAvailableProof(proofs: ContractProofMap | undefined) {
+  if (!proofs) return undefined;
+  for (const proof of proofs.values()) {
+    if (proof.hasOnchainProof) {
+      return proof;
+    }
+  }
+  return proofs.values().next().value;
+}
+
+export function useLoadContractProof() {
+  const { contractAddress } = useContractAddress() || "";
   const { data: contractInfo, error: contractError } = useLoadContractInfo(contractAddress);
-  const { status: publishProofStatus } = usePublishProof(verifier);
+  const { data: verifierRegistry } = useLoadVerifierRegistryInfo();
+  const verifierEntries = useMemo(() => Object.entries(verifierRegistry ?? {}), [verifierRegistry]);
   const isTestnet = useIsTestnet();
 
-  const { isLoading, error, data, refetch } = useQuery<
-    Partial<SourcesData> & {
-      hasOnchainProof: boolean;
-    }
-  >(
-    [contractAddress, verifier, isTestnet, "proof"],
-    async () => {
-      if (!contractAddress) {
-        return {
-          hasOnchainProof: false,
-        };
+  const { isLoading, error, data, refetch } = useQuery<ContractProofMap>({
+    queryKey: [contractAddress, verifierEntries.map(([id]) => id).join("|"), isTestnet, "proofs"],
+    enabled:
+      !!contractAddress && !!contractInfo?.codeCellToCompileBase64 && verifierEntries.length > 0,
+    retry: 2,
+    queryFn: async () => {
+      const map = new Map<string, ContractProofData>();
+      if (!contractAddress || !contractInfo?.codeCellToCompileBase64) {
+        return map;
       }
 
-      if (!contractInfo?.codeCellToCompileBase64) {
-        return { hasOnchainProof: false };
-      }
-
-      return loadProofData(contractInfo.codeCellToCompileBase64, verifier, isTestnet);
+      await Promise.all(
+        verifierEntries.map(async ([id, config]) => {
+          const proof = await loadProofData(
+            contractInfo.codeCellToCompileBase64,
+            config.name,
+            isTestnet,
+          );
+          map.set(id, proof);
+        }),
+      );
+      return map;
     },
-    {
-      enabled:
-        !!contractAddress &&
-        !!contractInfo?.codeCellToCompileBase64 &&
-        publishProofStatus === "initial",
-      retry: 2,
-    },
-  );
+  });
 
   return { isLoading, error: error ?? contractError, data, refetch };
 }

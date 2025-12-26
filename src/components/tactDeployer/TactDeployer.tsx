@@ -1,12 +1,12 @@
 import { Address, Cell, StateInit, toNano, contractAddress } from "ton";
 import { useClient } from "../../lib/useClient";
 import { useSendTXN } from "../../lib/useSendTxn";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Box, CircularProgress, Skeleton, useMediaQuery, useTheme } from "@mui/material";
 import contractIcon from "../../assets/contract.svg";
-import { ContentBox, ContractDataBox } from "../../App";
+import { ContentBox, ContractDataBox } from "../Layout";
 import { DataBlock, DataRowItem } from "../DataBlock";
 import { AppNotification, NotificationType } from "../AppNotification";
 import { DataBox, CenteringBox, IconBox, TitleText } from "../Common.styled";
@@ -43,7 +43,7 @@ function useTactDeployer({
   const tc = useClient();
   const isTestnet = useIsTestnet();
 
-  const { data, error, isLoading } = useQuery({
+  const { data, error, isLoading, isEnabled } = useQuery({
     enabled: !!tc && !!ipfsHash,
     queryKey: ["tactDeploy", ipfsHash, isTestnet],
     queryFn: async () => {
@@ -76,7 +76,7 @@ function useTactDeployer({
     },
   });
 
-  return { data, error, isLoading };
+  return { data, error, isLoading, isEnabled };
 }
 
 function useDeployContract(value: string, stateInit?: StateInit, address?: Address) {
@@ -104,36 +104,35 @@ function useDeployContract(value: string, stateInit?: StateInit, address?: Addre
 }
 
 export function ContractBlock() {
-  const dataRows: DataRowItem[] = [];
+  const { data, error, isLoading, isEnabled } = useTactDeployer({ workchain: 0 });
 
-  const { data, error } = useTactDeployer({ workchain: 0 });
+  const dataRows = useMemo<DataRowItem[]>(() => {
+    if (!data) return [];
+    return [
+      {
+        title: "Name",
+        value: data.pkg.name,
+      },
+      {
+        title: "Compiler",
+        value: `Tact ${data.pkg.compiler.version}`,
+      },
+      {
+        title: "Code Hash",
+        value: data.codeCellHash,
+      },
+      {
+        title: "Data Hash",
+        value: data.dataCellHash,
+      },
+      {
+        title: "Workchain",
+        value: workchainForAddress(data.address.toString()),
+      },
+    ];
+  }, [data]);
 
-  if (data) {
-    dataRows.push({
-      title: "Name",
-      value: data.pkg.name,
-    });
-    dataRows.push({
-      title: "Compiler",
-      value: `Tact ${data.pkg.compiler.version}`,
-    });
-    dataRows.push({
-      title: "Code Hash",
-      value: data.codeCellHash,
-    });
-    dataRows.push({
-      title: "Data Hash",
-      value: data.dataCellHash,
-    });
-    dataRows.push({
-      title: "Workchain",
-      value: workchainForAddress(data.address.toString()),
-    });
-  }
-
-  const isLoading = false;
-
-  return (
+  return isEnabled ? (
     <DataBlock
       title="Contract"
       icon={contractIcon}
@@ -141,7 +140,7 @@ export function ContractBlock() {
       isLoading={isLoading}
       isFlexibleWrapper={true}
     />
-  );
+  ) : null;
 }
 
 function DeployBlock() {

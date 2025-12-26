@@ -17,11 +17,11 @@ const ContentBox = styled(Box)({
   padding: "15px 24px",
 });
 
-export function AddSourcesBlock() {
+export function AddSourcesBlock({ contractAddress }: { contractAddress: string }) {
   const walletAddress = useTonAddress();
   const { hasFiles } = useFileStore();
   const { step, proceedToPublish, toggleSection, currentSection } = usePublishStore();
-  const { mutate, data, error, isLoading, compileStatus } = useSubmitSources();
+  const { mutate, data, error, isLoading, compileStatus } = useSubmitSources(contractAddress);
 
   const canPublish = !!data?.result?.msgCell;
 
@@ -40,11 +40,11 @@ export function AddSourcesBlock() {
             <>
               {hasFiles() && (
                 <>
-                  <FileTable />
-                  <CompilerSettings />
+                  <FileTable canPublish={canPublish} />
+                  <CompilerSettings canPublish={canPublish} />
                 </>
               )}
-              {(data || error) && <CompileOutput />}
+              {(data || error) && <CompileOutput contractAddress={contractAddress} />}
               {hasFiles() && (
                 <CenteringBox sx={{ justifyContent: "center" }} mt={3} mb="9px">
                   {!walletAddress ? (

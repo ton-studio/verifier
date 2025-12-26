@@ -62,7 +62,7 @@ export function Footer() {
       <Separator />
       <CredentialsWrapper>
         <FooterTextBoxLeft>
-          <Typography variant="body2">© 2023</Typography>
+          <Typography variant="body2">© 2026</Typography>
         </FooterTextBoxLeft>
         <ContributedWrapper>
           <CenteringBox sx={{ gap: 0.1 }}>
@@ -79,6 +79,10 @@ export function Footer() {
               target="_blank"
               href="https://orbs.com/powered-by">
               Orbs
+            </FooterLink>
+            &nbsp;and&nbsp;
+            <FooterLink sx={{ color: "#5E75E8" }} target="_blank" href="https://tonstudio.io/">
+              TON Studio
             </FooterLink>
           </CenteringBox>
         </ContributedWrapper>

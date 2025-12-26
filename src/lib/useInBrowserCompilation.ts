@@ -1,11 +1,17 @@
 import { SourceEntry } from "@ton-community/func-js";
 import { Cell } from "ton";
 import { isWebAssemblySupported } from "../utils/generalUtils";
-import { useLoadContractProof } from "./useLoadContractProof";
+import {
+  ContractProofData,
+  findProofByVerifierName,
+  getFirstAvailableProof,
+  useLoadContractProof,
+} from "./useLoadContractProof";
 import { useLoadContractInfo } from "./useLoadContractInfo";
 import { useState } from "react";
-import { FuncCompilerSettings } from "@ton-community/contract-verifier-sdk";
+import { FuncCompilerSettings, SourcesData } from "@ton-community/contract-verifier-sdk";
 import { AnalyticsAction, sendAnalyticsEvent } from "./googleAnalytics";
+import { useLoadVerifierRegistryInfo } from "./useLoadVerifierRegistryInfo";
 
 export enum VerificationResults {
   VALID = "VALID",
@@ -17,7 +23,8 @@ export enum VerificationResults {
 const compilerSupportedVersions = ["0.2.0", "0.3.0", "0.4.0", "0.4.1"];
 
 export function useInBrowserCompilation() {
-  const { data } = useLoadContractProof();
+  const { data: proofs } = useLoadContractProof();
+  const { data: verifierRegistry } = useLoadVerifierRegistryInfo();
   const { data: contractData } = useLoadContractInfo();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
@@ -30,10 +37,17 @@ export function useInBrowserCompilation() {
 
     const { FuncCompiler } = await import("@ton-community/func-js");
 
-    const sources: SourceEntry[] =
-      data?.files?.map((file) => ({ filename: file.name, content: file.content })) ?? [];
+    const proof =
+      findProofByVerifierName(proofs, verifierRegistry, "verifier.ton.org") ??
+      getFirstAvailableProof(proofs);
 
-    const funcVersion = (data?.compilerSettings as FuncCompilerSettings)?.funcVersion;
+    const sources: SourceEntry[] =
+      proof?.files?.map((file: SourcesData["files"][number]) => ({
+        filename: file.name,
+        content: file.content,
+      })) ?? [];
+
+    const funcVersion = (proof?.compilerSettings as FuncCompilerSettings)?.funcVersion;
 
     if (!funcVersion) {
       setError(`FunC is not available for in-browser verification`);
@@ -70,7 +84,7 @@ export function useInBrowserCompilation() {
 
     let result = await funcCompiler.compileFunc({
       sources,
-      targets: (data?.compilerSettings as FuncCompilerSettings).commandLine
+      targets: (proof?.compilerSettings as FuncCompilerSettings)?.commandLine
         .split(" ")
         .filter((s) => s.match(/\.(fc|func)$/)),
     });
@@ -95,18 +109,21 @@ export function useInBrowserCompilation() {
     if (!isWebAssemblySupported()) {
       return VerificationResults.WASM;
     }
-    if (data?.compiler !== "func") {
+    const proof =
+      findProofByVerifierName(proofs, verifierRegistry, "verifier.ton.org") ??
+      getFirstAvailableProof(proofs);
+    if (proof?.compiler !== "func") {
       return VerificationResults.COMPILER;
     }
-    if (!verifyCompilerVersion()) {
+    if (!verifyCompilerVersion(proof)) {
       return VerificationResults.VERSION;
     }
     return VerificationResults.VALID;
   };
 
-  const verifyCompilerVersion = () => {
+  const verifyCompilerVersion = (proof?: ContractProofData) => {
     return compilerSupportedVersions.some(
-      (v) => v === (data?.compilerSettings as FuncCompilerSettings)?.funcVersion,
+      (v) => v === (proof?.compilerSettings as FuncCompilerSettings)?.funcVersion,
     );
   };
 

@@ -14,12 +14,9 @@ import useNotification from "../lib/useNotification";
 import { Getters } from "./Getters";
 import { useLoadVerifierRegistryInfo } from "../lib/useLoadVerifierRegistryInfo";
 import { useContractAddress } from "../lib/useContractAddress";
-import { useLoadContractInfo } from "../lib/useLoadContractInfo";
-import { useQueries } from "@tanstack/react-query";
-import { loadProofData } from "../lib/useLoadContractProof";
-import { useIsTestnet } from "./TestnetBar";
 import { useSyncGetters } from "../lib/getter/useGetters";
 import { SourcesData } from "@ton-community/contract-verifier-sdk";
+import { ContractProofData, useLoadContractProof } from "../lib/useLoadContractProof";
 
 const TitleWrapper = styled(CenteringBox)({
   justifyContent: "space-between",
@@ -49,8 +46,6 @@ const SourceCodeTabs = styled(Tabs)({
   },
 });
 
-type ProofData = Partial<SourcesData> & { hasOnchainProof: boolean };
-
 type DomIds = {
   containerId: string;
   filesId: string;
@@ -63,7 +58,7 @@ type TabConfig =
       id: string;
       label: string;
       type: "sources";
-      proof: ProofData;
+      proof: ContractProofData;
       domIds: DomIds;
       getterKey: string;
     }
@@ -71,33 +66,24 @@ type TabConfig =
       id: string;
       label: string;
       type: "getters";
-      proof: ProofData;
+      proof: ContractProofData;
       getterKey: string;
     };
 
 function ContractSourceCode() {
   const { contractAddress } = useContractAddress();
-  const { data: contractInfo } = useLoadContractInfo(contractAddress);
   const { data: verifierRegistry } = useLoadVerifierRegistryInfo();
+  const { data: proofMap } = useLoadContractProof();
   const [value, setValue] = useState(0);
   const isExtraSmallScreen = useMediaQuery("(max-width: 450px)");
   const modifiedCodeBlock = useMediaQuery("(max-width: 600px)");
   const { showNotification } = useNotification();
-  const isTestnet = useIsTestnet();
 
   const verifierEntries = useMemo(() => Object.entries(verifierRegistry ?? {}), [verifierRegistry]);
 
-  const proofQueries = useQueries({
-    queries: verifierEntries.map(([id, config]) => ({
-      queryKey: ["verifierProof", contractAddress, id, isTestnet],
-      enabled: !!contractAddress && !!contractInfo?.codeCellToCompileBase64,
-      queryFn: () => loadProofData(contractInfo!.codeCellToCompileBase64, config.name, isTestnet),
-    })),
-  });
-
   const verifierProofs = useMemo(
     () =>
-      verifierEntries.map(([id, config], index) => {
+      verifierEntries.map(([id, config]) => {
         const safeKey = `${contractAddress ?? "unknown"}-${id}`.replace(/[^a-zA-Z0-9]/g, "-");
         return {
           id,
@@ -108,10 +94,10 @@ function ContractSourceCode() {
             filesId: `${safeKey}-files`,
             contentId: `${safeKey}-content`,
           },
-          proof: proofQueries[index]?.data as ProofData | undefined,
+          proof: proofMap?.get(id),
         };
       }),
-    [verifierEntries, proofQueries, contractAddress],
+    [verifierEntries, proofMap, contractAddress],
   );
 
   const tabs = useMemo<TabConfig[]>(() => {
@@ -265,7 +251,7 @@ function VerifierGettersPanel({
   isVisible,
 }: {
   getterKey: string;
-  proof: ProofData;
+  proof: ContractProofData;
   isVisible: boolean;
 }) {
   useSyncGetters(getterKey, proof?.files);

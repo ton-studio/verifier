@@ -10,6 +10,18 @@ type CellHash = {
   hex: string;
 };
 
+export type ContractInfo = {
+  codeCellHash: CellHash;
+  dataCellHash: CellHash;
+  decompiled: string;
+  balance: string;
+  libraryHash: {
+    base64?: string;
+    hex?: string;
+  };
+  codeCellToCompileBase64: string;
+};
+
 export function tryLoadLibraryCodeCellHash(exoticCodeCell: Cell) {
   if (exoticCodeCell.isExotic && exoticCodeCell.type == CellType.Library) {
     const br = new BitReader(exoticCodeCell.bits);
@@ -20,14 +32,19 @@ export function tryLoadLibraryCodeCellHash(exoticCodeCell: Cell) {
   return null;
 }
 
-export function useLoadContractInfo(contractAddressOverride?: string | null) {
+export function useLoadContractInfo(contractAddressOverride?: string | null): {
+  isLoading: boolean;
+  error: unknown;
+  data: ContractInfo | null | undefined;
+} {
   const { contractAddress: defaultAddress } = useContractAddress();
   const contractAddress = contractAddressOverride ?? defaultAddress;
   const client = useClient();
 
-  const { isLoading, error, data } = useQuery(
-    [contractAddress, "info"],
-    async () => {
+  const { isLoading, error, data } = useQuery<ContractInfo | null>({
+    queryKey: [contractAddress, "info"],
+    enabled: !!client,
+    queryFn: async () => {
       if (!client) throw new Error("Client is not initialized");
       if (!contractAddress) return null;
 
@@ -43,7 +60,7 @@ export function useLoadContractInfo(contractAddressOverride?: string | null) {
 
       const libraryHash = tryLoadLibraryCodeCellHash(codeCell);
 
-      let decompiled;
+      let decompiled = "Unable to decompile";
 
       if (libraryHash) {
         decompiled = "Library contract";
@@ -51,7 +68,7 @@ export function useLoadContractInfo(contractAddressOverride?: string | null) {
         try {
           decompiled = fromCode(codeCell);
         } catch (e) {
-          decompiled = e?.toString();
+          decompiled = e instanceof Error ? e.toString() : String(e);
         }
       }
 
@@ -76,8 +93,7 @@ export function useLoadContractInfo(contractAddressOverride?: string | null) {
         codeCellToCompileBase64: (libraryHash ?? codeCellHash).toString("base64"),
       };
     },
-    { enabled: !!client },
-  );
+  });
 
   return { isLoading, error, data };
 }

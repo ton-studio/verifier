@@ -8,8 +8,8 @@ import { useEffect } from "react";
 import { useLoadSourcesRegistryInfo } from "./useLoadSourcesRegistryInfo";
 import { useIsTestnet } from "../components/TestnetBar";
 
-export function usePublishProof(verifierId: string) {
-  const { data: submitSourcesData } = useSubmitSources();
+export function usePublishProof(contractAddress: string, verifier: string) {
+  const { data: submitSourcesData } = useSubmitSources(contractAddress, verifier);
   const { data: contractInfo } = useLoadContractInfo();
   const { data: sourcesRegistryData } = useLoadSourcesRegistryInfo();
   const isTestnet = useIsTestnet();
@@ -17,7 +17,7 @@ export function usePublishProof(verifierId: string) {
   const { sendTXN, data, clearTXN } = useSendTXN("publishProof", async (count: number) => {
     const ipfsLink = await getProofIpfsLink(
       contractInfo!.codeCellToCompileBase64,
-      verifierId,
+      verifier,
       isTestnet,
     );
 

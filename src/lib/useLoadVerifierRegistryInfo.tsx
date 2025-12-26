@@ -10,9 +10,10 @@ import { useLoadSourcesRegistryInfo } from "./useLoadSourcesRegistryInfo";
 export function useLoadVerifierRegistryInfo() {
   const { data: sourceRegistryData } = useLoadSourcesRegistryInfo();
   const tc = useClient();
-  return useQuery<Record<string, VerifierWithId>>(
-    ["verifierRegistry", sourceRegistryData?.verifierRegistry],
-    async () => {
+  return useQuery<Record<string, VerifierWithId>>({
+    enabled: !!sourceRegistryData && !!tc,
+    queryKey: ["verifierRegistry", sourceRegistryData?.verifierRegistry],
+    queryFn: async () => {
       if (!tc) throw new Error("Client is not initialized");
       const contract = tc.open(
         VerifierRegistryContract.createFromAddress(
@@ -22,6 +23,5 @@ export function useLoadVerifierRegistryInfo() {
       const verifiers = await contract.getVerifiers();
       return verifiers;
     },
-    { enabled: !!sourceRegistryData && !!tc },
-  );
+  });
 }

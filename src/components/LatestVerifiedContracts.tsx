@@ -2,6 +2,8 @@ import { Box, Skeleton, styled, Typography } from "@mui/material";
 import { useLoadLatestVerified } from "../lib/useLoadLatestVerified";
 import { useRef } from "react";
 import { useNavigatePreserveQuery } from "../lib/useNavigatePreserveQuery";
+import { useLoadVerifierRegistryInfo } from "../lib/useLoadVerifierRegistryInfo";
+import { CopyHash } from "./CopyHash";
 
 const Contract = styled(Box)(({ theme }) => ({
   background: "white",
@@ -53,6 +55,7 @@ const CompilerText = styled(Box)({
 
 export function LatestVerifiedContracts() {
   const { data: latestVerifiedContracts, isLoading } = useLoadLatestVerified();
+  const { data: verifierRegistry } = useLoadVerifierRegistryInfo();
   const navigate = useNavigatePreserveQuery();
   const skeletons = useRef(new Array(30).fill(null).map((_) => Math.random() * 100));
 
@@ -70,24 +73,44 @@ export function LatestVerifiedContracts() {
               width={400 + width}
               height={70}></Skeleton>
           ))}
-        {latestVerifiedContracts?.map((contract) => (
-          <Contract
-            onClick={(e) => {
-              navigate(`/${contract.address}`);
-            }}>
-            <AddressText>{contract.address}</AddressText>
-            <div style={{ display: "flex", alignItems: "center", marginTop: 6.5 }}>
-              <Typography
-                sx={{
-                  fontSize: 14,
-                  color: "#728A9699",
-                }}>
-                {contract.mainFile}
-              </Typography>
-              <CompilerText>{contract.compiler}</CompilerText>
-            </div>
-          </Contract>
-        ))}
+        {latestVerifiedContracts?.map((contract) => {
+          const verifierName = contract.verifierId
+            ? verifierRegistry?.["0x" + contract.verifierId]?.name
+            : undefined;
+          const verifiedDate =
+            contract.timestamp && new Date(contract.timestamp * 1000).toLocaleDateString();
+          return (
+            <Contract
+              onClick={(e) => {
+                navigate(`/${contract.address}`);
+              }}>
+              <AddressText>{contract.address}</AddressText>
+              <div style={{ display: "flex", alignItems: "center", marginTop: 6.5 }}>
+                <Typography
+                  sx={{
+                    fontSize: 14,
+                    color: "#728A9699",
+                  }}>
+                  {contract.mainFile}
+                </Typography>
+                <CompilerText>{contract.compiler}</CompilerText>
+              </div>
+              {verifierName || contract.verifierId || verifiedDate ? (
+                <Typography sx={{ fontSize: 13, color: "#728A96", marginTop: 4 }}>
+                  Verified {verifiedDate && <>on&nbsp;{verifiedDate}</>}{" "}
+                  {verifierName ? (
+                    <>by&nbsp;{verifierName}</>
+                  ) : contract.verifierId ? (
+                    <>
+                      by&nbsp;
+                      <CopyHash value={contract.verifierId} maxSize={18} />
+                    </>
+                  ) : null}
+                </Typography>
+              ) : null}
+            </Contract>
+          );
+        })}
       </ContractsList>
     </ContractsWrapper>
   );

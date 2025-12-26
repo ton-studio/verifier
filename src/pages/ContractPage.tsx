@@ -1,74 +1,46 @@
-import "./App.css";
-import { TopBar } from "./components/TopBar";
-import { useLoadContractProof } from "./lib/useLoadContractProof";
-import ContractSourceCode from "./components/ContractSourceCode";
-import { useOverride } from "./lib/useOverride";
-import { useFileStore } from "./lib/useFileStore";
-import { styled } from "@mui/system";
+import "../App.css";
+import { TopBar } from "../components/TopBar";
+import { hasAnyOnchainProof, useLoadContractProof } from "../lib/useLoadContractProof";
+import ContractSourceCode from "../components/ContractSourceCode";
+import { useOverride } from "../lib/useOverride";
+import { useFileStore } from "../lib/useFileStore";
 import { Backdrop, Box, Skeleton, useMediaQuery, useTheme } from "@mui/material";
-import { useContractAddress } from "./lib/useContractAddress";
+import { useContractAddress } from "../lib/useContractAddress";
 import React, { useEffect, useRef, useState } from "react";
-import { ContractBlock } from "./components/ContractBlock";
-import { CompilerBlock } from "./components/CompilerBlock";
-import { AddSourcesBlock } from "./components/AddSourcesBlock";
-import { PublishProof } from "./components/PublishProof";
-import { Footer } from "./components/Footer";
-import { CenteringWrapper } from "./components/Footer.styled";
-import { AppNotification, NotificationType } from "./components/AppNotification";
-import { NotificationTitle } from "./components/CompileOutput";
-import { VerificationInfoBlock } from "./components/VerificationInfoBlock";
-import { CenteringBox } from "./components/Common.styled";
-import { useAddressHistory } from "./lib/useAddressHistory";
-import { LatestVerifiedContracts } from "./components/LatestVerifiedContracts";
-import { TestnetBar, useIsTestnet } from "./components/TestnetBar";
-import { useRemoteConfig } from "./lib/useRemoteConfig";
-import { useCompilerSettingsStore } from "./lib/useCompilerSettingsStore";
-import { useCustomGetter } from "./lib/getter/useCustomGetter";
-import { usePublishStore } from "./lib/usePublishSteps";
-import { usePreload } from "./lib/usePreload";
-import { useSubmitSources } from "./lib/useSubmitSources";
-import { VerifierListBlock } from "./components/VerifierListBlock";
+import { ContractBlock } from "../components/ContractBlock";
+import { CompilerBlock } from "../components/CompilerBlock";
+import { AddSourcesBlock } from "../components/AddSourcesBlock";
+import { PublishProof } from "../components/PublishProof";
+import { Footer } from "../components/Footer";
+import { CenteringWrapper } from "../components/Footer.styled";
+import { AppNotification, NotificationType } from "../components/AppNotification";
+import { NotificationTitle } from "../components/CompileOutput";
+import { VerificationInfoBlock } from "../components/VerificationInfoBlock";
+import { CenteringBox } from "../components/Common.styled";
+import { useAddressHistory } from "../lib/useAddressHistory";
+import { TestnetBar, useIsTestnet } from "../components/TestnetBar";
+import { useRemoteConfig } from "../lib/useRemoteConfig";
+import { useCompilerSettingsStore } from "../lib/useCompilerSettingsStore";
+import { useCustomGetter } from "../lib/getter/useCustomGetter";
+import { usePublishStore } from "../lib/usePublishSteps";
+import { usePreload } from "../lib/usePreload";
+import { ContentBox, ContractDataBox, OverflowingBox } from "../components/Layout";
 
-export const ContentBox = styled(Box)({
-  maxWidth: 1160,
-  margin: "auto",
-});
-
-interface ContractDataBoxProps {
-  isMobile?: boolean;
-}
-
-export const ContractDataBox = styled(Box)((props: ContractDataBoxProps) => ({
-  display: props.isMobile ? "inherit" : "flex",
-  gap: 20,
-}));
-
-const OverflowingBox = styled(Box)({
-  boxSizing: "border-box",
-  maxWidth: 1160,
-  width: "100%",
-  marginTop: 20,
-  backgroundColor: "#fff",
-  borderRadius: 20,
-  padding: 20,
-  color: "#000",
-});
-
-function App() {
-  const { isLoading, data: proofData, error } = useLoadContractProof();
+function ContractPage() {
   const [isDragging, setIsDragging] = useState(false);
   const theme = useTheme();
   const canOverride = useOverride();
-  const { contractAddress, isAddressEmpty } = useContractAddress();
+  const { contractAddress } = useContractAddress();
+  const { isLoading, data: proofData, error } = useLoadContractProof({ contractAddress });
   const { hasFiles, reset: resetFileStore } = useFileStore();
   const { reset: resetPublishStore } = usePublishStore();
   const { isPreloaded, clearPreloaded } = usePreload();
-  const { invalidate: invalidateSubmitSources } = useSubmitSources();
   const scrollToRef = useRef();
   const headerSpacings = useMediaQuery(theme.breakpoints.down("lg"));
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("md"));
   const showSkeleton = !error && isLoading && contractAddress;
   const isTestnet = useIsTestnet();
+  const isInvalidAddress = contractAddress === null;
 
   useAddressHistory();
 
@@ -79,7 +51,6 @@ function App() {
       clearPreloaded();
     }
     resetPublishStore();
-    invalidateSubmitSources();
   }, [contractAddress]);
 
   const { clear: clearCustomGetter } = useCustomGetter();
@@ -91,16 +62,18 @@ function App() {
     window.scrollTo({ behavior: "auto", top: scrollToRef.current?.["offsetTop"] });
   }, [window.location.pathname]);
 
-  // Initialize func version
-  const { initialize } = useCompilerSettingsStore(); // TODO IN PROG
-  const {
-    data: { funcVersions, tolkVersions },
-  } = useRemoteConfig();
+  const { initialize } = useCompilerSettingsStore();
+  const { data: remoteConfig } = useRemoteConfig();
+  const funcVersions = remoteConfig?.funcVersions ?? [];
+  const tolkVersions = remoteConfig?.tolkVersions ?? [];
   useEffect(() => {
     if ((funcVersions?.length ?? 0) > 0) {
       initialize(funcVersions?.[0], tolkVersions?.[0]);
     }
   }, [funcVersions, tolkVersions]);
+
+  const proofsLoaded = proofData !== undefined;
+  const anyOnchainProof = hasAnyOnchainProof(proofData);
 
   return (
     <Box
@@ -115,8 +88,7 @@ function App() {
       <Box ref={scrollToRef} />
       {isTestnet && <TestnetBar />}
       <TopBar />
-      {contractAddress === null && isAddressEmpty && <LatestVerifiedContracts />}
-      {contractAddress === null && !isAddressEmpty && (
+      {isInvalidAddress && (
         <Box m={4}>
           <AppNotification
             singleLine
@@ -164,7 +136,7 @@ function App() {
 
         <ContractDataBox isMobile={isSmallScreen}>
           <ContractBlock />
-          {proofData?.hasOnchainProof && <CompilerBlock />}
+          {anyOnchainProof && <CompilerBlock />}
         </ContractDataBox>
         {showSkeleton && (
           <OverflowingBox sx={{ padding: "30px 24px 24px 24px" }} mb={3}>
@@ -175,14 +147,16 @@ function App() {
             <Skeleton variant="rectangular" width="100%" height={250} />
           </OverflowingBox>
         )}
-        {!isLoading && proofData?.hasOnchainProof && <VerificationInfoBlock />}
-        {proofData && (!proofData.hasOnchainProof || canOverride) && (
+        {!isLoading && anyOnchainProof && <VerificationInfoBlock />}
+        {contractAddress && proofsLoaded && (!anyOnchainProof || canOverride) && (
           <>
-            <AddSourcesBlock />
-            {hasFiles() && <PublishProof />}
+            <AddSourcesBlock contractAddress={contractAddress} />
+            {hasFiles() && (
+              <PublishProof verifier={"verifier.ton.org"} contractAddress={contractAddress} />
+            )}
           </>
         )}
-        {proofData && !hasFiles() ? (
+        {proofsLoaded && !hasFiles() ? (
           <OverflowingBox sx={{ padding: 0 }} mb={5}>
             <ContractSourceCode />
           </OverflowingBox>
@@ -199,12 +173,9 @@ function App() {
             )}
           </>
         )}
-        <OverflowingBox sx={{ padding: 0 }} mb={5}>
-          <VerifierListBlock />
-        </OverflowingBox>
-        {proofData && <Footer />}
+        {proofsLoaded && <Footer />}
       </ContentBox>
-      {!proofData && (
+      {!proofsLoaded && (
         <CenteringWrapper sx={{ bottom: 0, width: "100%" }}>
           <Footer />
         </CenteringWrapper>
@@ -213,4 +184,4 @@ function App() {
   );
 }
 
-export default App;
+export default ContractPage;
