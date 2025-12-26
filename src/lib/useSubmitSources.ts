@@ -45,17 +45,16 @@ const testnetVerifiers: Record<string, VerifierConfig> = {
     backendUrls: ["https://ton-source-prod-testnet-1.herokuapp.com"],
   },
   "verifier.ton.org": {
-    backendUrls: ["http://localhost:3003"],
+    backendUrls: ["https://verifier-testnet.tonstudio.io"],
   },
 };
 
 const mainnetVerifiers: Record<string, VerifierConfig> = {
   "verifier.ton.org": {
     backendUrls: [
-      "http://localhost:3004",
-      "http://localhost:3005",
-      "http://localhost:3006",
-      "http://localhost:4000",
+      "https://verifier-mainnet-1.tonstudio.io",
+      "https://verifier-mainnet-2.tonstudio.io",
+      "https://verifier-mainnet-3.tonstudio.io",
     ],
   },
   "orbs.com": {
