@@ -4,7 +4,6 @@ import { useLoadContractProof } from "./lib/useLoadContractProof";
 import ContractSourceCode from "./components/ContractSourceCode";
 import { useOverride } from "./lib/useOverride";
 import { useFileStore } from "./lib/useFileStore";
-import { useResetState } from "./lib/useResetState";
 import { styled } from "@mui/system";
 import { Backdrop, Box, Skeleton, useMediaQuery, useTheme } from "@mui/material";
 import { useContractAddress } from "./lib/useContractAddress";
@@ -21,10 +20,14 @@ import { VerificationInfoBlock } from "./components/VerificationInfoBlock";
 import { CenteringBox } from "./components/Common.styled";
 import { useAddressHistory } from "./lib/useAddressHistory";
 import { LatestVerifiedContracts } from "./components/LatestVerifiedContracts";
-import { useInitializeGetters } from "./lib/getter/useGetters";
 import { TestnetBar, useIsTestnet } from "./components/TestnetBar";
 import { useRemoteConfig } from "./lib/useRemoteConfig";
 import { useCompilerSettingsStore } from "./lib/useCompilerSettingsStore";
+import { useCustomGetter } from "./lib/getter/useCustomGetter";
+import { usePublishStore } from "./lib/usePublishSteps";
+import { usePreload } from "./lib/usePreload";
+import { useSubmitSources } from "./lib/useSubmitSources";
+import { VerifierListBlock } from "./components/VerifierListBlock";
 
 export const ContentBox = styled(Box)({
   maxWidth: 1160,
@@ -57,7 +60,10 @@ function App() {
   const theme = useTheme();
   const canOverride = useOverride();
   const { contractAddress, isAddressEmpty } = useContractAddress();
-  const { hasFiles } = useFileStore();
+  const { hasFiles, reset: resetFileStore } = useFileStore();
+  const { reset: resetPublishStore } = usePublishStore();
+  const { isPreloaded, clearPreloaded } = usePreload();
+  const { invalidate: invalidateSubmitSources } = useSubmitSources();
   const scrollToRef = useRef();
   const headerSpacings = useMediaQuery(theme.breakpoints.down("lg"));
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("md"));
@@ -65,8 +71,21 @@ function App() {
   const isTestnet = useIsTestnet();
 
   useAddressHistory();
-  useResetState();
-  useInitializeGetters();
+
+  useEffect(() => {
+    if (!isPreloaded) {
+      resetFileStore();
+    } else {
+      clearPreloaded();
+    }
+    resetPublishStore();
+    invalidateSubmitSources();
+  }, [contractAddress]);
+
+  const { clear: clearCustomGetter } = useCustomGetter();
+  useEffect(() => {
+    clearCustomGetter();
+  }, [contractAddress]);
 
   useEffect(() => {
     window.scrollTo({ behavior: "auto", top: scrollToRef.current?.["offsetTop"] });
@@ -180,6 +199,9 @@ function App() {
             )}
           </>
         )}
+        <OverflowingBox sx={{ padding: 0 }} mb={5}>
+          <VerifierListBlock />
+        </OverflowingBox>
         {proofData && <Footer />}
       </ContentBox>
       {!proofData && (

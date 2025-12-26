@@ -252,8 +252,8 @@ function CustomGetterComponent({ getter }: { getter: CustomStateGetter }) {
   );
 }
 
-export function Getters() {
-  const { getters } = useGetters();
+export function Getters({ getterKey }: { getterKey: string }) {
+  const { getters } = useGetters(getterKey);
   const customGetter = useCustomGetter();
 
   return (

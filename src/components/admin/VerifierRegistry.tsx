@@ -252,7 +252,7 @@ export function VerifierRegistry() {
       {isLoading && <CircularProgress />}
       <Stack>
         {isLoading && "Loading..."}
-        {data?.map((v, index) => {
+        {Object.values(data ?? {}).map((v, index) => {
           return <VerifierRegsitryForm verifier={v} altColor={index % 2 !== 1} isNew={false} />;
         })}
       </Stack>

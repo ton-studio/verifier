@@ -1,21 +1,23 @@
 import { SourcesData } from "@ton-community/contract-verifier-sdk";
-import { useLoadContractProof } from "./useLoadContractProof";
 import { useEffect } from "react";
 
-export function useLoadContractSourceCode() {
-  const { data } = useLoadContractProof();
+type LoadContractSourceCodeOptions = {
+  containerSelector: string;
+  fileListSelector: string;
+  contentSelector: string;
+};
 
+export function useLoadContractSourceCode(
+  data: (Partial<SourcesData> & { files?: SourcesData["files"] }) | undefined,
+  { containerSelector, fileListSelector, contentSelector }: LoadContractSourceCodeOptions,
+) {
   useEffect(() => {
-    if (!data?.files) return;
+    if (!data?.files?.length) return;
     ContractVerifierUI.loadSourcesData(data as SourcesData, {
-      containerSelector: "#myVerifierContainer",
-      fileListSelector: "#myVerifierFiles",
-      contentSelector: "#myVerifierContent",
-      theme: "light", // TODO denis
+      containerSelector,
+      fileListSelector,
+      contentSelector,
+      theme: "light",
     });
-  }, [data?.files]);
-
-  return {
-    hasOnchainProof: data?.hasOnchainProof,
-  };
+  }, [data, containerSelector, fileListSelector, contentSelector]);
 }

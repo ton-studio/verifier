@@ -24,9 +24,42 @@ export async function getProofIpfsLink(
   });
 }
 
-export function useLoadContractProof(verifier: string = "verifier.ton.org") {
-  const { contractAddress } = useContractAddress();
-  const { data: contractInfo, error: contractError } = useLoadContractInfo();
+type UseLoadContractProofArgs = {
+  contractAddress?: string | null;
+  verifier?: string;
+};
+
+export async function loadProofData(
+  codeCellHashBase64: string,
+  verifier: string,
+  isTestnet: boolean,
+) {
+  const ipfsLink = await getProofIpfsLink(codeCellHashBase64, verifier, isTestnet);
+
+  if (!ipfsLink) {
+    return { hasOnchainProof: false, ipfsLink };
+  }
+
+  const sourcesData = await ContractVerifier.getSourcesData(ipfsLink, {
+    testnet: isTestnet,
+    ipfsConverter: (ipfsUrl: string) => {
+      const endpoint = "https://gateway.pinata.cloud/ipfs/";
+      return ipfsUrl.replace("ipfs://", endpoint);
+    },
+  });
+  return {
+    hasOnchainProof: true,
+    ...sourcesData,
+  };
+}
+
+export function useLoadContractProof({
+  contractAddress: overrideAddress,
+  verifier = "verifier.ton.org",
+}: UseLoadContractProofArgs = {}) {
+  const { contractAddress: defaultAddress } = useContractAddress();
+  const contractAddress = overrideAddress ?? defaultAddress;
+  const { data: contractInfo, error: contractError } = useLoadContractInfo(contractAddress);
   const { status: publishProofStatus } = usePublishProof(verifier);
   const isTestnet = useIsTestnet();
 
@@ -35,7 +68,7 @@ export function useLoadContractProof(verifier: string = "verifier.ton.org") {
       hasOnchainProof: boolean;
     }
   >(
-    [contractAddress, "proof"],
+    [contractAddress, verifier, isTestnet, "proof"],
     async () => {
       if (!contractAddress) {
         return {
@@ -43,27 +76,11 @@ export function useLoadContractProof(verifier: string = "verifier.ton.org") {
         };
       }
 
-      const ipfsLink = await getProofIpfsLink(
-        contractInfo!.codeCellToCompileBase64,
-        verifier,
-        isTestnet,
-      );
-
-      if (!ipfsLink) {
-        return { hasOnchainProof: false, ipfsLink };
+      if (!contractInfo?.codeCellToCompileBase64) {
+        return { hasOnchainProof: false };
       }
 
-      const sourcesData = await ContractVerifier.getSourcesData(ipfsLink, {
-        testnet: isTestnet,
-        ipfsConverter: (ipfsUrl: string, testnet: boolean) => {
-          let endpoint = "https://gateway.pinata.cloud/ipfs/";
-          return ipfsUrl.replace("ipfs://", endpoint);
-        },
-      });
-      return {
-        hasOnchainProof: true,
-        ...sourcesData,
-      };
+      return loadProofData(contractInfo.codeCellToCompileBase64, verifier, isTestnet);
     },
     {
       enabled:

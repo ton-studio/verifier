@@ -4,7 +4,7 @@ import { useClient } from "../useClient";
 import { sendAnalyticsEvent, AnalyticsAction } from "../googleAnalytics";
 import { makeGetCall } from "../makeGetCall";
 import { useContractAddress } from "../useContractAddress";
-import { useGetters, StateGetter } from "./useGetters";
+import { StateGetter } from "./useGetters";
 import { beginCell } from "ton";
 
 export type PossibleRepresentation = "address" | "coins" | "base64" | "boc" | "int" | "raw" | "hex";
@@ -13,12 +13,10 @@ export type GetterResponseValue = { type: PossibleRepresentation; value: string 
 
 export function useQueryGetter(getter: StateGetter) {
   const { contractAddress } = useContractAddress();
-  const { getters } = useGetters();
   const tc = useClient();
 
   return useMutation([contractAddress, "getter", getter.name], async () => {
     if (!contractAddress) return;
-    if (!getters) return;
     if (!tc) return;
 
     sendAnalyticsEvent(AnalyticsAction.RUN_GETTER);

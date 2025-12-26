@@ -94,7 +94,9 @@ export function useSubmitSources(verifier: string = "verifier.ton.org") {
   const { clear, setStatus, status } = useSubmitSourcesStatusStore();
   const { data: verifierRegistryData } = useLoadVerifierRegistryInfo();
 
-  const verifierRegistryConfig = verifierRegistryData?.find((v) => v.name === verifier);
+  const verifierRegistryConfig = Object.values(verifierRegistryData ?? {}).find(
+    (v) => v.name === verifier,
+  );
   const backends = useBackends(verifier);
 
   const mutation = useCustomMutation(["submitSources"], async () => {

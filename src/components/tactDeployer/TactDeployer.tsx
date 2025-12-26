@@ -18,7 +18,7 @@ import { AppButton } from "../AppButton";
 import { workchainForAddress } from "../../lib/workchainForAddress";
 import { getProofIpfsLink } from "../../lib/useLoadContractProof";
 import { useFileStore } from "../../lib/useFileStore";
-import { usePreload } from "../../lib/useResetState";
+import { usePreload } from "../../lib/usePreload";
 import { CustomValueInput } from "./TactDeployer.styled";
 import { useNavigatePreserveQuery } from "../../lib/useNavigatePreserveQuery";
 import { TestnetBar, useIsTestnet } from "../TestnetBar";

@@ -20,8 +20,9 @@ export function tryLoadLibraryCodeCellHash(exoticCodeCell: Cell) {
   return null;
 }
 
-export function useLoadContractInfo() {
-  const { contractAddress } = useContractAddress();
+export function useLoadContractInfo(contractAddressOverride?: string | null) {
+  const { contractAddress: defaultAddress } = useContractAddress();
+  const contractAddress = contractAddressOverride ?? defaultAddress;
   const client = useClient();
 
   const { isLoading, error, data } = useQuery(

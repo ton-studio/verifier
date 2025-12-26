@@ -1,9 +1,8 @@
 import "./ContractSourceCode.css";
 import { Box, Tabs, Tab, IconButton, useMediaQuery } from "@mui/material";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { VerifiedSourceCode } from "./VerifiedSourceCode";
 import { DisassembledSourceCode } from "./DisassembledSourceCode";
-import { useLoadContractProof } from "../lib/useLoadContractProof";
 import { CenteringBox, IconBox, TitleBox, TitleText } from "./Common.styled";
 import verified from "../assets/verified-light.svg";
 import { styled } from "@mui/system";
@@ -13,12 +12,14 @@ import copy from "../assets/copy.svg";
 import { downloadSources } from "../lib/downloadSources";
 import useNotification from "../lib/useNotification";
 import { Getters } from "./Getters";
-import { useGetters } from "../lib/getter/useGetters";
-
-enum CODE {
-  DISASSEMBLED,
-  SOURCE,
-}
+import { useLoadVerifierRegistryInfo } from "../lib/useLoadVerifierRegistryInfo";
+import { useContractAddress } from "../lib/useContractAddress";
+import { useLoadContractInfo } from "../lib/useLoadContractInfo";
+import { useQueries } from "@tanstack/react-query";
+import { loadProofData } from "../lib/useLoadContractProof";
+import { useIsTestnet } from "./TestnetBar";
+import { useSyncGetters } from "../lib/getter/useGetters";
+import { SourcesData } from "@ton-community/contract-verifier-sdk";
 
 const TitleWrapper = styled(CenteringBox)({
   justifyContent: "space-between",
@@ -48,33 +49,122 @@ const SourceCodeTabs = styled(Tabs)({
   },
 });
 
+type ProofData = Partial<SourcesData> & { hasOnchainProof: boolean };
+
+type DomIds = {
+  containerId: string;
+  filesId: string;
+  contentId: string;
+};
+
+type TabConfig =
+  | { id: string; label: string; type: "disassembled" }
+  | {
+      id: string;
+      label: string;
+      type: "sources";
+      proof: ProofData;
+      domIds: DomIds;
+      getterKey: string;
+    }
+  | {
+      id: string;
+      label: string;
+      type: "getters";
+      proof: ProofData;
+      getterKey: string;
+    };
+
 function ContractSourceCode() {
-  const { data: contractProof } = useLoadContractProof();
-  const [value, setValue] = useState<number | undefined>(undefined);
+  const { contractAddress } = useContractAddress();
+  const { data: contractInfo } = useLoadContractInfo(contractAddress);
+  const { data: verifierRegistry } = useLoadVerifierRegistryInfo();
+  const [value, setValue] = useState(0);
   const isExtraSmallScreen = useMediaQuery("(max-width: 450px)");
   const modifiedCodeBlock = useMediaQuery("(max-width: 600px)");
   const { showNotification } = useNotification();
+  const isTestnet = useIsTestnet();
+
+  const verifierEntries = useMemo(() => Object.entries(verifierRegistry ?? {}), [verifierRegistry]);
+
+  const proofQueries = useQueries({
+    queries: verifierEntries.map(([id, config]) => ({
+      queryKey: ["verifierProof", contractAddress, id, isTestnet],
+      enabled: !!contractAddress && !!contractInfo?.codeCellToCompileBase64,
+      queryFn: () => loadProofData(contractInfo!.codeCellToCompileBase64, config.name, isTestnet),
+    })),
+  });
+
+  const verifierProofs = useMemo(
+    () =>
+      verifierEntries.map(([id, config], index) => {
+        const safeKey = `${contractAddress ?? "unknown"}-${id}`.replace(/[^a-zA-Z0-9]/g, "-");
+        return {
+          id,
+          config,
+          getterKey: `${contractAddress ?? "unknown"}::${id}`,
+          domIds: {
+            containerId: `${safeKey}-container`,
+            filesId: `${safeKey}-files`,
+            contentId: `${safeKey}-content`,
+          },
+          proof: proofQueries[index]?.data as ProofData | undefined,
+        };
+      }),
+    [verifierEntries, proofQueries, contractAddress],
+  );
+
+  const tabs = useMemo<TabConfig[]>(() => {
+    const initialTabs: TabConfig[] = [
+      { id: "disassembled", label: "Disassembled", type: "disassembled" },
+    ];
+    verifierProofs.forEach(({ id, config, proof, getterKey, domIds }) => {
+      if (!proof?.hasOnchainProof) {
+        return;
+      }
+      const labelSuffix = config.name || id;
+      initialTabs.push({
+        id: `sources-${id}`,
+        label: `Sources (${labelSuffix})`,
+        type: "sources",
+        proof,
+        domIds,
+        getterKey,
+      });
+      initialTabs.push({
+        id: `getters-${id}`,
+        label: `Getters (${labelSuffix})`,
+        type: "getters",
+        proof,
+        getterKey,
+      });
+    });
+    return initialTabs;
+  }, [verifierProofs]);
+
+  const hasAnyProof = tabs.some((tab) => tab.type === "sources");
+
+  useEffect(() => {
+    const firstSourcesIndex = tabs.findIndex((tab) => tab.type === "sources");
+    setValue(firstSourcesIndex !== -1 ? firstSourcesIndex : 0);
+  }, [tabs.length, hasAnyProof]);
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
   };
 
-  const onCopy = useCallback(async (type: CODE) => {
-    const element = document.querySelector(
-      type === CODE.SOURCE
-        ? `#myVerifierContent > pre > code > .contract-verifier-code-content`
-        : `pre > code > div.hljs.language-fift`,
-    ) as HTMLElement;
-    navigator.clipboard.writeText(element?.innerText);
+  const handleCopy = useCallback(
+    (selector: string) => {
+      const element = document.querySelector(selector) as HTMLElement | null;
+      if (!element) return;
+      navigator.clipboard.writeText(element.innerText);
+      showNotification("Copied to clipboard!", "success");
+    },
+    [showNotification],
+  );
 
-    showNotification("Copied to clipboard!", "success");
-  }, []);
-
-  useEffect(() => {
-    setValue(!!contractProof?.hasOnchainProof ? 0 : 1);
-  }, [contractProof?.hasOnchainProof]);
-
-  const { getters } = useGetters();
+  const activeTab = tabs[value] ?? tabs[0];
+  const activeProof = activeTab && activeTab.type !== "disassembled" ? activeTab.proof : undefined;
 
   return (
     <Box
@@ -91,11 +181,10 @@ function ContractSourceCode() {
               <img src={verified} alt="Block icon" width={41} height={41} />
             </IconBox>
             <TitleText>
-              {!!contractProof?.hasOnchainProof && "Verified"} Source {isExtraSmallScreen && <br />}{" "}
-              Code
+              {hasAnyProof && "Verified"} Source {isExtraSmallScreen && <br />} Code
             </TitleText>
           </CenteringBox>
-          {value === 0 && (
+          {activeTab?.type === "sources" && (
             <Box
               sx={{
                 alignSelf: "baseline",
@@ -110,7 +199,7 @@ function ContractSourceCode() {
                 height={modifiedCodeBlock ? 30 : 37}
                 width={modifiedCodeBlock ? 30 : 167}
                 onClick={() => {
-                  contractProof?.files?.length && downloadSources(contractProof.files);
+                  activeProof?.files?.length && downloadSources(activeProof.files);
                 }}>
                 <img src={download} alt="Download icon" width={19} height={19} />
                 {modifiedCodeBlock ? "" : "Download sources"}
@@ -121,40 +210,76 @@ function ContractSourceCode() {
       </TitleBox>
       <ContentBox p={3}>
         <SourceCodeTabs value={value} onChange={handleChange}>
-          <Tab
-            sx={{ textTransform: "none" }}
-            disabled={!contractProof?.hasOnchainProof}
-            label="Sources"
-          />
-          <Tab sx={{ textTransform: "none" }} label="Disassembled" />
-          <Tab sx={{ textTransform: "none" }} label={`Getters (${getters?.length ?? 0})`} />
+          {tabs.map((tab, index) => (
+            <Tab key={tab.id} value={index} sx={{ textTransform: "none" }} label={tab.label} />
+          ))}
         </SourceCodeTabs>
-        <Box sx={{ display: value === 0 ? "block" : "none" }}>
-          <VerifiedSourceCode button={<CopyButton onCopy={onCopy} copyText={CODE.SOURCE} />} />
-        </Box>
-        <Box sx={{ display: value === 1 ? "block" : "none" }}>
-          <DisassembledSourceCode
-            button={<CopyButton onCopy={onCopy} copyText={CODE.DISASSEMBLED} />}
-          />
-        </Box>
-        <Box sx={{ display: value === 2 ? "block" : "none" }}>
-          <Getters />
-        </Box>
+        {tabs.map((tab, index) => {
+          if (tab.type === "disassembled") {
+            return (
+              <Box key={tab.id} sx={{ display: value === index ? "block" : "none" }}>
+                <DisassembledSourceCode
+                  button={
+                    <CopyButton onCopy={() => handleCopy(`pre > code > div.hljs.language-fift`)} />
+                  }
+                />
+              </Box>
+            );
+          }
+          if (tab.type === "sources") {
+            return (
+              <Box key={tab.id} sx={{ display: value === index ? "block" : "none" }}>
+                <VerifiedSourceCode
+                  proofData={tab.proof}
+                  domIds={tab.domIds!}
+                  button={
+                    <CopyButton
+                      onCopy={() =>
+                        handleCopy(
+                          `#${tab.domIds!.contentId} > pre > code > .contract-verifier-code-content`,
+                        )
+                      }
+                    />
+                  }
+                />
+              </Box>
+            );
+          }
+          return (
+            <VerifierGettersPanel
+              key={tab.id}
+              getterKey={tab.getterKey}
+              proof={tab.proof}
+              isVisible={value === index}
+            />
+          );
+        })}
       </ContentBox>
     </Box>
   );
 }
 
-const CopyButton = ({
-  copyText,
-  onCopy,
+function VerifierGettersPanel({
+  getterKey,
+  proof,
+  isVisible,
 }: {
-  copyText: CODE;
-  onCopy: (type: CODE) => Promise<void>;
-}) => {
+  getterKey: string;
+  proof: ProofData;
+  isVisible: boolean;
+}) {
+  useSyncGetters(getterKey, proof?.files);
+  return (
+    <Box sx={{ display: isVisible ? "block" : "none" }}>
+      <Getters getterKey={getterKey} />
+    </Box>
+  );
+}
+
+const CopyButton = ({ onCopy }: { onCopy: () => void }) => {
   return (
     <CopyBox>
-      <IconButton onClick={() => onCopy(copyText)}>
+      <IconButton onClick={onCopy}>
         <img alt="Copy Icon" src={copy} width={16} height={16} />
       </IconButton>
     </CopyBox>
