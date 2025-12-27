@@ -37,36 +37,7 @@ interface RowData {
   command?: string;
   verifiedOn?: string;
   hasProof: boolean;
-  isConflicting: boolean;
 }
-
-const StatusBadge = ({
-  color,
-  background,
-  label,
-}: {
-  color: string;
-  background: string;
-  label: string;
-}) => (
-  <Box
-    component="span"
-    sx={{
-      display: "inline-flex",
-      alignItems: "center",
-      fontSize: 11,
-      fontWeight: 600,
-      px: 1,
-      py: "2px",
-      borderRadius: 999,
-      color,
-      backgroundColor: background,
-      textTransform: "uppercase",
-      letterSpacing: 0.4,
-    }}>
-    {label}
-  </Box>
-);
 
 function getCompilerVersionData(proof?: ContractProofData) {
   if (!proof) return { label: undefined, link: undefined };
@@ -128,56 +99,13 @@ export function CompilerBlock() {
 
   const verifierEntries = useMemo(() => Object.entries(verifierRegistry ?? {}), [verifierRegistry]);
 
-  const { rows, hasConflicts } = useMemo(() => {
+  const rows = useMemo<RowData[]>(() => {
     if (!verifierEntries.length) {
-      return { rows: [] as RowData[], hasConflicts: false };
+      return [];
     }
-    const verifierStatuses = verifierEntries.map(([id, config]) => {
+    return verifierEntries.map(([id, config]) => {
       const proof = proofs?.get(id);
       const hasProof = !!proof?.hasOnchainProof;
-      const fingerprint = hasProof
-        ? (proof?.ipfsHttpLink ?? `${id}-${proof?.compiler ?? "unknown"}`)
-        : null;
-      return { id, config, proof, hasProof, fingerprint };
-    });
-
-    const proofCounts = verifierStatuses.reduce<Map<string, number>>((acc, status) => {
-      if (status.hasProof && status.fingerprint) {
-        acc.set(status.fingerprint, (acc.get(status.fingerprint) ?? 0) + 1);
-      }
-      return acc;
-    }, new Map());
-
-    let canonicalFingerprint: string | null = null;
-    let canonicalCount = 0;
-    let multipleTopCounts = false;
-    proofCounts.forEach((count, fingerprint) => {
-      if (count > canonicalCount) {
-        canonicalFingerprint = fingerprint;
-        canonicalCount = count;
-        multipleTopCounts = false;
-      } else if (count === canonicalCount && canonicalCount !== 0) {
-        multipleTopCounts = true;
-      }
-    });
-
-    const conflictingVerifierIds = new Set<string>();
-    if (proofCounts.size > 1) {
-      verifierStatuses.forEach((status) => {
-        if (!status.hasProof || !status.fingerprint) {
-          return;
-        }
-        if (
-          multipleTopCounts ||
-          !canonicalFingerprint ||
-          status.fingerprint !== canonicalFingerprint
-        ) {
-          conflictingVerifierIds.add(status.id);
-        }
-      });
-    }
-
-    const mappedRows: RowData[] = verifierStatuses.map(({ id, config, proof, hasProof }) => {
       const compilerInfo = formatCompilerInfo(proof);
       return {
         id,
@@ -190,11 +118,8 @@ export function CompilerBlock() {
             ? proof.verificationDate.toLocaleDateString()
             : undefined,
         hasProof,
-        isConflicting: conflictingVerifierIds.has(id),
       };
     });
-
-    return { rows: mappedRows, hasConflicts: conflictingVerifierIds.size > 0 };
   }, [verifierEntries, proofs]);
 
   const hasVerifiers = verifierEntries.length > 0;
@@ -211,13 +136,6 @@ export function CompilerBlock() {
             </IconBox>
             <TitleText>Verifications</TitleText>
           </CenteringBox>
-          {hasConflicts && (
-            <StatusBadge
-              label="Conflicting proofs"
-              color="#FC5656"
-              background="rgba(252, 86, 86, 0.12)"
-            />
-          )}
         </CenteringBox>
       </TitleBox>
       <Box px={3} pb={3}>
@@ -241,19 +159,9 @@ export function CompilerBlock() {
                         <CopyHash value={row.id} maxSize={20} />
                       </TableCell>
                       <TableCell sx={bodyCellSx}>
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
-                          <Typography sx={{ fontSize: 14, fontWeight: 600, color: "#161C28" }}>
-                            {row.name}
-                          </Typography>
-                          {row.isConflicting && row.hasProof && (
-                            <StatusBadge
-                              label="Mismatch"
-                              color="#FC5656"
-                              background="rgba(252, 86, 86, 0.12)"
-                            />
-                          )}
-                        </Box>
+                        <Typography sx={{ fontSize: 14, fontWeight: 600, color: "#161C28" }}>
+                          {row.name}
+                        </Typography>
                       </TableCell>
                       <TableCell sx={bodyCellSx}>
                         {row.compilerLink && row.hasProof ? (
