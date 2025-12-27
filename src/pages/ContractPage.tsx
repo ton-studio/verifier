@@ -31,7 +31,7 @@ function ContractPage() {
   const theme = useTheme();
   const canOverride = useOverride();
   const { contractAddress } = useContractAddress();
-  const { isLoading, data: proofData, error } = useLoadContractProof({ contractAddress });
+  const { isLoading, data: proofData, error } = useLoadContractProof();
   const { hasFiles, reset: resetFileStore } = useFileStore();
   const { reset: resetPublishStore } = usePublishStore();
   const { isPreloaded, clearPreloaded } = usePreload();
