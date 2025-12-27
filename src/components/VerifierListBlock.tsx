@@ -64,10 +64,13 @@ export function VerifierListBlock() {
           sx={{
             display: "flex",
             flexDirection: "row",
+            flexWrap: "wrap",
             gap: 2,
           }}>
           {verifiers.map(([id, config]) => (
-            <VerifierCard key={id} verifierId={id} config={config} />
+            <Box sx={{ minWidth: "200px", maxWidth: "500px" }}>
+              <VerifierCard key={id} verifierId={id} config={config} />
+            </Box>
           ))}
         </Box>
       ) : (
