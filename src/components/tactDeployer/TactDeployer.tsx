@@ -28,7 +28,7 @@ const deployableTraitInitMessage = Cell.fromBoc(
 )[0];
 
 async function fetchFromIpfs(hash: string) {
-  const IPFS_GW = `https://gateway.pinata.cloud`;
+  const IPFS_GW = `https://ton.mypinata.cloud`;
   return fetch(`${IPFS_GW}/ipfs/${hash}`);
 }
 

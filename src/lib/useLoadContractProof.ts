@@ -46,7 +46,7 @@ export async function loadProofData(
   const sourcesData = await ContractVerifier.getSourcesData(ipfsLink, {
     testnet: isTestnet,
     ipfsConverter: (ipfsUrl: string) => {
-      const endpoint = "https://gateway.pinata.cloud/ipfs/";
+      const endpoint = "https://ton.mypinata.cloud/ipfs/";
       return ipfsUrl.replace("ipfs://", endpoint);
     },
   });
