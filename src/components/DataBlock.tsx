@@ -8,6 +8,7 @@ import {
   DataRow,
   DataRowsBox,
   DataRowTitle,
+  DataRowTitleXL,
   DataRowValue,
   IconsWrapper,
 } from "./DataBlock.styled";
@@ -29,6 +30,7 @@ interface DataBlockProps {
   icon: string;
   dataRows: DataRowItem[];
   isLoading?: boolean;
+  longerTitle?: boolean;
 }
 
 const renderRowValue = (
@@ -69,7 +71,14 @@ const renderRowValue = (
   );
 };
 
-export function DataBlock({ isFlexibleWrapper, icon, title, dataRows, isLoading }: DataBlockProps) {
+export function DataBlock({
+  isFlexibleWrapper,
+  icon,
+  title,
+  dataRows,
+  isLoading,
+  longerTitle,
+}: DataBlockProps) {
   const Wrapper = isFlexibleWrapper ? DataFlexibleBox : DataBox;
   const { showNotification } = useNotification();
   const isExtraSmallScreen = useMediaQuery("(max-width: 500px)");
@@ -95,7 +104,11 @@ export function DataBlock({ isFlexibleWrapper, icon, title, dataRows, isLoading 
                 isExtraSmallScreen={isExtraSmallScreen}
                 key={title}
                 isShrinked={!isFlexibleWrapper}>
-                <DataRowTitle>{title}</DataRowTitle>
+                {longerTitle ? (
+                  <DataRowTitleXL>{title}</DataRowTitleXL>
+                ) : (
+                  <DataRowTitle>{title}</DataRowTitle>
+                )}
                 <DataRowValue sx={{ cursor: !!onClick ? "pointer" : "initial" }} onClick={onClick}>
                   {renderRowValue(value, customLink, tooltip, subtitle)}
                 </DataRowValue>

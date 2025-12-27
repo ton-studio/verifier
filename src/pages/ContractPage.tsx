@@ -136,8 +136,9 @@ function ContractPage() {
 
         <ContractDataBox isMobile={isSmallScreen}>
           <ContractBlock />
-          {anyOnchainProof && <CompilerBlock />}
+          {!isLoading && anyOnchainProof && <VerificationInfoBlock />}
         </ContractDataBox>
+        {proofsLoaded && <CompilerBlock />}
         {showSkeleton && (
           <OverflowingBox sx={{ padding: "30px 24px 24px 24px" }} mb={3}>
             <CenteringBox mb={3}>
@@ -147,7 +148,6 @@ function ContractPage() {
             <Skeleton variant="rectangular" width="100%" height={250} />
           </OverflowingBox>
         )}
-        {!isLoading && anyOnchainProof && <VerificationInfoBlock />}
         {contractAddress && proofsLoaded && (!anyOnchainProof || canOverride) && (
           <>
             <AddSourcesBlock contractAddress={contractAddress} />

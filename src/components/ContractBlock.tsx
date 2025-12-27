@@ -102,7 +102,7 @@ export function ContractBlock() {
       icon={contractIcon}
       dataRows={dataRows}
       isLoading={isLoading}
-      isFlexibleWrapper={hasAnyOnchainProof(proofData)}
+      isFlexibleWrapper
     />
   );
 }

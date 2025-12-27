@@ -31,10 +31,10 @@ const DataRow = styled(CenteringBox)((props: DataRowProps) => ({
     props.isShrinked && !props.isExtraSmallScreen
       ? 0
       : !props.isShrinked
-      ? ""
-      : props.isExtraSmallScreen
-      ? "100%"
-      : "",
+        ? ""
+        : props.isExtraSmallScreen
+          ? "100%"
+          : "",
   minHeight: 38,
   padding: "10px 24px",
   transition: "background .15s",
@@ -45,6 +45,13 @@ const DataRowTitle = styled(Typography)({
   fontSize: 14,
   color: "#000",
   minWidth: 90,
+  fontWeight: 800,
+});
+
+const DataRowTitleXL = styled(Typography)({
+  fontSize: 14,
+  color: "#000",
+  minWidth: 120,
   fontWeight: 800,
 });
 
@@ -60,4 +67,12 @@ const IconsWrapper = styled(CenteringBox)({
   justifyContent: "flex-end",
 });
 
-export { DataRow, DataRowValue, DataRowTitle, DataRowsBox, DataFlexibleBox, IconsWrapper };
+export {
+  DataRow,
+  DataRowValue,
+  DataRowTitleXL,
+  DataRowTitle,
+  DataRowsBox,
+  DataFlexibleBox,
+  IconsWrapper,
+};
