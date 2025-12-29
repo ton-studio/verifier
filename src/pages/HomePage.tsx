@@ -10,7 +10,6 @@ import { Footer } from "../components/Footer";
 import { CenteringWrapper } from "../components/Footer.styled";
 
 function HomePage() {
-  const [isDragging, setIsDragging] = useState(false);
   const theme = useTheme();
   const headerSpacings = useMediaQuery(theme.breakpoints.down("lg"));
   const isTestnet = useIsTestnet();
@@ -21,15 +20,7 @@ function HomePage() {
   }, []);
 
   return (
-    <Box
-      onDragEnter={() => setIsDragging(true)}
-      onDrop={() => setIsDragging(false)}
-      onClick={() => setIsDragging(false)}>
-      <Backdrop
-        sx={{ color: "#fff", zIndex: 4 }}
-        open={isDragging}
-        onDragEnd={() => setIsDragging(false)}
-      />
+    <Box>
       <Box ref={scrollToRef} />
       {isTestnet && <TestnetBar />}
       <TopBar />

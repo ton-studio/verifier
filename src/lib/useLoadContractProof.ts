@@ -46,7 +46,7 @@ export async function loadProofData(
   const sourcesData = await ContractVerifier.getSourcesData(ipfsLink, {
     testnet: isTestnet,
     ipfsConverter: (ipfsUrl: string) => {
-      const endpoint = "https://ton.mypinata.cloud/ipfs/";
+      const endpoint = "https://ipfs.ton.org/ipfs/";
       return ipfsUrl.replace("ipfs://", endpoint);
     },
   });
@@ -64,6 +64,17 @@ export function hasAnyOnchainProof(proofs: ContractProofMap | undefined) {
     }
   }
   return false;
+}
+
+export function getMissingOnchainProofs(
+  proofs: ContractProofMap | undefined,
+  registry?: Record<string, VerifierWithId>,
+) {
+  if (!proofs || !registry) return [];
+  return Object.values(registry).filter((verifier) => {
+    const proof = proofs.get(verifier.id);
+    return !proof?.hasOnchainProof;
+  });
 }
 
 export function findProofByVerifierName(
@@ -89,7 +100,7 @@ export function getFirstAvailableProof(proofs: ContractProofMap | undefined) {
 
 export function useLoadContractProof() {
   const { contractAddress } = useContractAddress() || "";
-  const { data: contractInfo, error: contractError } = useLoadContractInfo(contractAddress);
+  const { data: contractInfo, error: contractError } = useLoadContractInfo();
   const { data: verifierRegistry } = useLoadVerifierRegistryInfo();
   const verifierEntries = useMemo(() => Object.entries(verifierRegistry ?? {}), [verifierRegistry]);
   const isTestnet = useIsTestnet();

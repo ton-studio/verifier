@@ -20,7 +20,25 @@ export enum VerificationResults {
   VERSION = "FunC version is not supported",
 }
 
-const compilerSupportedVersions = ["0.2.0", "0.3.0", "0.4.0", "0.4.1"];
+const funcCompilers = new Map([
+  ["0.2.0", async () => (await import("func-js-bin-0.2.0")).object],
+  ["0.3.0", async () => (await import("func-js-bin-0.3.0")).object],
+  ["0.4.0", async () => (await import("func-js-bin-0.4.0")).object],
+  ["0.4.1", async () => (await import("func-js-bin-0.4.1")).object],
+  ["0.4.2", async () => (await import("func-js-bin-0.4.2")).object],
+  ["0.4.3", async () => (await import("func-js-bin-0.4.3")).object],
+  ["0.4.4", async () => (await import("func-js-bin-0.4.4")).object],
+  ["0.4.4-newops", async () => (await import("func-js-bin-0.4.4-newops")).object],
+  ["0.4.4-newops.1", async () => (await import("func-js-bin-0.4.4-newops.1")).object],
+  ["0.4.5", async () => (await import("func-js-bin-0.4.5")).object],
+  ["0.4.6", async () => (await import("func-js-bin-0.4.6")).object],
+  ["0.4.6-wasmfix.0", async () => (await import("func-js-bin-0.4.6-wasmfix.0")).object],
+]);
+
+async function importFuncCompiler(version: string) {
+  const doImport = funcCompilers.get(version);
+  return doImport && (await doImport());
+}
 
 export function useInBrowserCompilation() {
   const { data: proofs } = useLoadContractProof();
@@ -37,9 +55,7 @@ export function useInBrowserCompilation() {
 
     const { FuncCompiler } = await import("@ton-community/func-js");
 
-    const proof =
-      findProofByVerifierName(proofs, verifierRegistry, "verifier.ton.org") ??
-      getFirstAvailableProof(proofs);
+    const proof = getFirstAvailableProof(proofs);
 
     const sources: SourceEntry[] =
       proof?.files?.map((file: SourcesData["files"][number]) => ({
@@ -55,31 +71,7 @@ export function useInBrowserCompilation() {
       return;
     }
 
-    let compilerInstance: any;
-
-    switch (funcVersion) {
-      case "0.2.0": {
-        let { object: instance } = await import("func-js-bin-0.2.0");
-        compilerInstance = instance;
-        break;
-      }
-      case "0.3.0": {
-        let { object: instance } = await import("func-js-bin-0.3.0");
-        compilerInstance = instance;
-        break;
-      }
-      case "0.4.0": {
-        let { object: instance } = await import("func-js-bin-0.4.0");
-        compilerInstance = instance;
-        break;
-      }
-      case "0.4.1": {
-        let { object: instance } = await import("func-js-bin-0.4.1");
-        compilerInstance = instance;
-        break;
-      }
-    }
-
+    const compilerInstance = await importFuncCompiler(funcVersion);
     const funcCompiler = new FuncCompiler(compilerInstance);
 
     let result = await funcCompiler.compileFunc({
@@ -109,9 +101,7 @@ export function useInBrowserCompilation() {
     if (!isWebAssemblySupported()) {
       return VerificationResults.WASM;
     }
-    const proof =
-      findProofByVerifierName(proofs, verifierRegistry, "verifier.ton.org") ??
-      getFirstAvailableProof(proofs);
+    const proof = getFirstAvailableProof(proofs);
     if (proof?.compiler !== "func") {
       return VerificationResults.COMPILER;
     }
@@ -122,9 +112,7 @@ export function useInBrowserCompilation() {
   };
 
   const verifyCompilerVersion = (proof?: ContractProofData) => {
-    return compilerSupportedVersions.some(
-      (v) => v === (proof?.compilerSettings as FuncCompilerSettings)?.funcVersion,
-    );
+    return funcCompilers.has((proof?.compilerSettings as FuncCompilerSettings)?.funcVersion);
   };
 
   return { verifyContract, isVerificationEnabled, loading, error, hash };

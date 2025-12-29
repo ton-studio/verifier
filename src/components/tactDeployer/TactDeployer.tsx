@@ -28,7 +28,7 @@ const deployableTraitInitMessage = Cell.fromBoc(
 )[0];
 
 async function fetchFromIpfs(hash: string) {
-  const IPFS_GW = `https://ton.mypinata.cloud`;
+  const IPFS_GW = `https://ipfs.ton.org`;
   return fetch(`${IPFS_GW}/ipfs/${hash}`);
 }
 
@@ -96,7 +96,12 @@ function useDeployContract(value: string, stateInit?: StateInit, address?: Addre
   return {
     sendTXN: () => {
       if (!address) return;
-      sendTXN(address, toNano(value), deployableTraitInitMessage, stateInit);
+      sendTXN({
+        to: address,
+        value: toNano(value),
+        message: deployableTraitInitMessage,
+        stateInit,
+      });
     },
     status: data.status,
     clearTXN,

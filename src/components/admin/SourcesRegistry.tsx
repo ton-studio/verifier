@@ -76,7 +76,9 @@ function SourcesRegistry() {
     if (values.admin !== data?.admin) {
       try {
         const cell = changeAdmin(Address.parse(values.admin));
-        const result = await requestTXN(data.address.toString(), toNano("0.01"), cell);
+        const result = await requestTXN([
+          { to: data.address.toString(), value: toNano("0.01"), message: cell },
+        ]);
         if (result === "rejected") {
           adminForm.setError("admin", { message: "Failed to change admin" });
         }
@@ -99,7 +101,9 @@ function SourcesRegistry() {
     if (values.verifierRegistry !== data?.verifierRegistry) {
       try {
         const cell = changeVerifierRegistry(Address.parse(values.verifierRegistry));
-        const result = await requestTXN(data.address.toString(), toNano("0.01"), cell);
+        const result = await requestTXN([
+          { to: data.address.toString(), value: toNano("0.01"), message: cell },
+        ]);
         if (result === "rejected") {
           verifierRegistryForm.setError("verifierRegistry", {
             message: "Failed to change verifier registry",
@@ -128,7 +132,9 @@ function SourcesRegistry() {
     ) {
       try {
         const cell = setDeploymentCosts(toNano(values.minTon), toNano(values.maxTon));
-        const result = await requestTXN(data.address.toString(), toNano("0.01"), cell);
+        const result = await requestTXN([
+          { to: data.address.toString(), value: toNano("0.01"), message: cell },
+        ]);
         if (result === "rejected") {
           deploymentCostsForm.setError("root", { message: "Failed to change deployment costs" });
         }

@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { randomFromArray, useBackends } from "./useSubmitSources";
+import { randomFromArray, getBackends } from "./useSubmitSources";
+import { useIsTestnet } from "../components/TestnetBar";
 
 type LatestContract = {
   address: string;
@@ -11,7 +12,8 @@ type LatestContract = {
 };
 
 export function useLoadLatestVerified() {
-  const backends = useBackends("verifier.ton.org");
+  const isTestnet = useIsTestnet();
+  const backends = getBackends("verifier.ton.org", isTestnet);
   const backend = randomFromArray(backends);
 
   const { isLoading, error, data } = useQuery<LatestContract[]>({

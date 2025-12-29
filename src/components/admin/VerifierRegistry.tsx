@@ -129,22 +129,24 @@ function VerifierRegsitryForm({
     }
 
     try {
-      const result = await requestTXN(
-        sourcesRegistry?.verifierRegistry ?? "",
-        toNano(isNew ? "1000" : "0.01"),
-        updateVerifier({
-          id: sha256BN(values.name),
-          quorum: Number(values.quorum),
-          endpoints: new Map<bigint, number>(
-            values.pubKeyEndpoints.map(({ pubKey, ip }) => [
-              toBigIntBE(Buffer.from(pubKey, "base64")),
-              ip2num(ip),
-            ]),
-          ),
-          name: values.name,
-          marketingUrl: values.url,
-        }),
-      );
+      const result = await requestTXN([
+        {
+          to: sourcesRegistry?.verifierRegistry ?? "",
+          value: toNano(isNew ? "1000" : "0.01"),
+          message: updateVerifier({
+            id: sha256BN(values.name),
+            quorum: Number(values.quorum),
+            endpoints: new Map<bigint, number>(
+              values.pubKeyEndpoints.map(({ pubKey, ip }) => [
+                toBigIntBE(Buffer.from(pubKey, "base64")),
+                ip2num(ip),
+              ]),
+            ),
+            name: values.name,
+            marketingUrl: values.url,
+          }),
+        },
+      ]);
       if (result === "rejected") {
         form.setError("root", { message: `Failed to update config of ${values.name}` });
       }
@@ -184,11 +186,13 @@ function VerifierRegsitryForm({
             <Button
               text="Remove"
               onClick={() => {
-                requestTXN(
-                  sourcesRegistry!.verifierRegistry,
-                  toNano("0.01"),
-                  removeVerifier({ id: sha256BN(form.getValues("name")) }),
-                );
+                requestTXN([
+                  {
+                    to: sourcesRegistry!.verifierRegistry,
+                    value: toNano("0.01"),
+                    message: removeVerifier({ id: sha256BN(form.getValues("name")) }),
+                  },
+                ]);
               }}
             />
           )}

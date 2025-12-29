@@ -139,7 +139,7 @@ export function InBrowserVerificationGuide() {
               width={144}
               background="#1976d2"
               hoverBackground="#156cc2">
-              Verify
+              Verify locally
             </AppButton>
           </Box>
         </Tooltip>
@@ -163,7 +163,7 @@ export function InBrowserVerificationGuide() {
               }}
             />
           )}
-          Verify
+          Verify locally
         </AppButton>
       )}
       {error && (
@@ -212,7 +212,7 @@ export function InBrowserVerificationGuide() {
               </CenteringBox>
               <SuccessTitle>
                 {" "}
-                <b>Great!</b> Compile output hash matches this on-chain contract
+                <b>Great!</b> In-browser compiler output hash matches this on-chain contract
               </SuccessTitle>
             </CenteringBox>
           }

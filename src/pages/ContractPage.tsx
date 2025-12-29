@@ -1,6 +1,11 @@
 import "../App.css";
 import { TopBar } from "../components/TopBar";
-import { hasAnyOnchainProof, useLoadContractProof } from "../lib/useLoadContractProof";
+import {
+  getMissingOnchainProofs,
+  hasAnyOnchainProof,
+  useLoadContractProof,
+  getFirstAvailableProof,
+} from "../lib/useLoadContractProof";
 import ContractSourceCode from "../components/ContractSourceCode";
 import { useOverride } from "../lib/useOverride";
 import { useFileStore } from "../lib/useFileStore";
@@ -25,20 +30,28 @@ import { useCustomGetter } from "../lib/getter/useCustomGetter";
 import { usePublishStore } from "../lib/usePublishSteps";
 import { usePreload } from "../lib/usePreload";
 import { ContentBox, ContractDataBox, OverflowingBox } from "../components/Layout";
+import { useLoadVerifierRegistryInfo } from "../lib/useLoadVerifierRegistryInfo";
+import { clearSubmitSourcesStore } from "../lib/useSubmitSources";
+import { SkeletonBox } from "../components/SkeletonBox";
+import { useLoadContractInfo } from "../lib/useLoadContractInfo";
+import { InBrowserVerificationGuide } from "../components/VerificationGuides";
 
 function ContractPage() {
-  const [isDragging, setIsDragging] = useState(false);
   const theme = useTheme();
   const canOverride = useOverride();
   const { contractAddress } = useContractAddress();
-  const { isLoading, data: proofData, error } = useLoadContractProof();
+  const {
+    data: contractData,
+    isLoading: contractIsLoading,
+    error: contractIsError,
+  } = useLoadContractInfo();
+  const { isLoading: proofIsLoading, data: proofData, error } = useLoadContractProof();
   const { hasFiles, reset: resetFileStore } = useFileStore();
   const { reset: resetPublishStore } = usePublishStore();
   const { isPreloaded, clearPreloaded } = usePreload();
   const scrollToRef = useRef();
   const headerSpacings = useMediaQuery(theme.breakpoints.down("lg"));
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("md"));
-  const showSkeleton = !error && isLoading && contractAddress;
   const isTestnet = useIsTestnet();
   const isInvalidAddress = contractAddress === null;
 
@@ -51,6 +64,7 @@ function ContractPage() {
       clearPreloaded();
     }
     resetPublishStore();
+    clearSubmitSourcesStore();
   }, [contractAddress]);
 
   const { clear: clearCustomGetter } = useCustomGetter();
@@ -73,18 +87,13 @@ function ContractPage() {
   }, [funcVersions, tolkVersions]);
 
   const proofsLoaded = proofData !== undefined;
+  const { data: verifierRegistry } = useLoadVerifierRegistryInfo();
   const anyOnchainProof = hasAnyOnchainProof(proofData);
+  const missingProofs = getMissingOnchainProofs(proofData, verifierRegistry);
+  const availableProof = getFirstAvailableProof(proofData);
 
   return (
-    <Box
-      onDragEnter={() => setIsDragging(true)}
-      onDrop={() => setIsDragging(false)}
-      onClick={() => setIsDragging(false)}>
-      <Backdrop
-        sx={{ color: "#fff", zIndex: 4 }}
-        open={isDragging}
-        onDragEnd={() => setIsDragging(false)}
-      />
+    <Box>
       <Box ref={scrollToRef} />
       {isTestnet && <TestnetBar />}
       <TopBar />
@@ -124,54 +133,32 @@ function ContractPage() {
             />
           </Box>
         )}
-        {showSkeleton && (
-          <OverflowingBox sx={{ padding: "30px 24px 24px 24px" }} mb={3}>
-            <CenteringBox mb={3}>
-              <Skeleton variant="circular" width={41} height={41} sx={{ marginRight: 2 }} />
-              <Skeleton variant="text" sx={{ fontSize: "20px", width: 200 }} />
-            </CenteringBox>
-            <Skeleton variant="rectangular" width="100%" height={250} />
-          </OverflowingBox>
-        )}
-
         <ContractDataBox isMobile={isSmallScreen}>
           <ContractBlock />
-          {!isLoading && anyOnchainProof && <VerificationInfoBlock />}
+          {!proofIsLoading && anyOnchainProof && <VerificationInfoBlock />}
         </ContractDataBox>
-        {proofsLoaded && <CompilerBlock />}
-        {showSkeleton && (
-          <OverflowingBox sx={{ padding: "30px 24px 24px 24px" }} mb={3}>
-            <CenteringBox mb={3}>
-              <Skeleton variant="circular" width={41} height={41} sx={{ marginRight: 2 }} />
-              <Skeleton variant="text" sx={{ fontSize: "20px", width: 200 }} />
-            </CenteringBox>
-            <Skeleton variant="rectangular" width="100%" height={250} />
-          </OverflowingBox>
+        {proofIsLoading || contractIsLoading ? (
+          <SkeletonBox content />
+        ) : (
+          contractData && <CompilerBlock />
         )}
-        {contractAddress && proofsLoaded && (!anyOnchainProof || canOverride) && (
+        {anyOnchainProof && <InBrowserVerificationGuide />}
+        {contractAddress && proofsLoaded && (missingProofs.length > 0 || canOverride) && (
           <>
-            <AddSourcesBlock contractAddress={contractAddress} />
+            <AddSourcesBlock
+              contractAddress={contractAddress}
+              missingVerifiers={missingProofs}
+              availableProof={availableProof}
+            />
             {hasFiles() && (
-              <PublishProof verifier={"verifier.ton.org"} contractAddress={contractAddress} />
+              <PublishProof missingProofs={missingProofs} contractAddress={contractAddress} />
             )}
           </>
         )}
-        {proofsLoaded && !hasFiles() ? (
+        {proofsLoaded && !hasFiles() && (
           <OverflowingBox sx={{ padding: 0 }} mb={5}>
             <ContractSourceCode />
           </OverflowingBox>
-        ) : (
-          <>
-            {showSkeleton && (
-              <OverflowingBox sx={{ padding: "30px 24px 24px 24px" }} mb={5}>
-                <CenteringBox mb={3}>
-                  <Skeleton variant="circular" width={41} height={41} sx={{ marginRight: 2 }} />
-                  <Skeleton variant="text" sx={{ fontSize: "20px", width: 250 }} />
-                </CenteringBox>
-                <Skeleton variant="rectangular" width="100%" height={500} />
-              </OverflowingBox>
-            )}
-          </>
         )}
         {proofsLoaded && <Footer />}
       </ContentBox>

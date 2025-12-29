@@ -43,18 +43,17 @@ const ContractsWrapper = styled(Box)(({ theme }) => ({
 }));
 
 export function VerifierListBlock() {
-  const { data, isLoading } = useLoadVerifierRegistryInfo();
+  const { data, isLoading, isEnabled } = useLoadVerifierRegistryInfo();
   const verifiers = Object.entries(data ?? {});
   const hasVerifiers = verifiers.length > 0;
   const theme = useTheme();
-  const isSmallScreen = useMediaQuery(theme.breakpoints.down("md"));
 
   return (
     <ContractsWrapper>
       <Typography variant="h6">
         <b>Verifiers</b>
       </Typography>
-      {isLoading && !hasVerifiers && (
+      {(isLoading || !isEnabled) && !hasVerifiers && (
         <Box>
           <Skeleton variant="rectangular" height={80} sx={{ borderRadius: 2, mb: 2 }} />
         </Box>
@@ -74,6 +73,7 @@ export function VerifierListBlock() {
           ))}
         </Box>
       ) : (
+        isEnabled &&
         !isLoading && (
           <CenteringBox>
             <Typography sx={{ fontSize: 14, color: "#4A4C4F" }}>

@@ -32,13 +32,12 @@ export function tryLoadLibraryCodeCellHash(exoticCodeCell: Cell) {
   return null;
 }
 
-export function useLoadContractInfo(contractAddressOverride?: string | null): {
+export function useLoadContractInfo(): {
   isLoading: boolean;
   error: unknown;
   data: ContractInfo | null | undefined;
 } {
-  const { contractAddress: defaultAddress } = useContractAddress();
-  const contractAddress = contractAddressOverride ?? defaultAddress;
+  const { contractAddress } = useContractAddress();
   const client = useClient();
 
   const { isLoading, error, data } = useQuery<ContractInfo | null>({
