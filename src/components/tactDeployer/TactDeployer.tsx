@@ -42,7 +42,7 @@ class IpfsServerError extends Error {
 }
 
 async function fetchFromIpfs(hash: string) {
-  const response = await fetch(`https://gateway.pinata.cloud/ipfs/${hash}`);
+  const response = await fetch(`https://gateway.pinata.cloud/ipfs/${hash.replace("ipfs://", "")}`);
 
   if (!response.ok) {
     // For 4xx errors (client errors like 404), throw a specific error
@@ -73,10 +73,12 @@ function useTactDeployer({
     queryFn: async () => {
       if (!ipfsHash || !tc) return null;
       const content = await fetchFromIpfs(ipfsHash).then((res) => res.json());
-      const pkg = await fetchFromIpfs(content.pkg).then((res) => res.json());
-      const dataCell = await fetchFromIpfs(content.dataCell)
+      const pkgPromise = await fetchFromIpfs(content.pkg).then((res) => res.json());
+      const dataCellPromise = await fetchFromIpfs(content.dataCell)
         .then((res) => res.arrayBuffer())
         .then((buf) => Cell.fromBoc(Buffer.from(buf))[0]);
+
+      const [pkg, dataCell] = [await pkgPromise, await dataCellPromise];
 
       const codeCell = Cell.fromBoc(Buffer.from(pkg.code, "base64"))[0];
       const address = contractAddress(workchain, { code: codeCell, data: dataCell });
