@@ -1,4 +1,4 @@
-import { Address, Cell, StateInit, toNano, contractAddress } from "ton";
+import { Address, Cell, contractAddress, StateInit, toNano } from "ton";
 import { useClient } from "../../lib/useClient";
 import { useSendTXN } from "../../lib/useSendTxn";
 import { useMemo, useState } from "react";
@@ -9,7 +9,7 @@ import contractIcon from "../../assets/contract.svg";
 import { ContentBox, ContractDataBox } from "../Layout";
 import { DataBlock, DataRowItem } from "../DataBlock";
 import { AppNotification, NotificationType } from "../AppNotification";
-import { DataBox, CenteringBox, IconBox, TitleText } from "../Common.styled";
+import { CenteringBox, DataBox, IconBox, TitleText } from "../Common.styled";
 import { NotificationTitle } from "../CompileOutput";
 import { TopBar } from "./TopBar";
 import { Footer } from "../Footer";
@@ -27,9 +27,33 @@ const deployableTraitInitMessage = Cell.fromBoc(
   Buffer.from("te6cckEBAQEADgAAGJRqmLYAAAAAAAAAAOnNeQ0=", "base64"),
 )[0];
 
+class IpfsNotFoundError extends Error {
+  constructor(hash: string) {
+    super(`Tact package could not be found in IPFS (hash: ${hash})`);
+    this.name = "IpfsNotFoundError";
+  }
+}
+
+class IpfsServerError extends Error {
+  constructor(hash: string, status: number) {
+    super(`IPFS server error ${status} for hash: ${hash}`);
+    this.name = "IpfsServerError";
+  }
+}
+
 async function fetchFromIpfs(hash: string) {
-  const IPFS_GW = `https://ipfs.ton.org`;
-  return fetch(`${IPFS_GW}/ipfs/${hash}`);
+  const response = await fetch(`https://gateway.pinata.cloud/ipfs/${hash}`);
+
+  if (!response.ok) {
+    // For 4xx errors (client errors like 404), throw a specific error
+    if (response.status >= 400 && response.status < 500) {
+      throw new IpfsNotFoundError(hash);
+    }
+    // For 5xx errors (server errors), throw a different error that can be retried
+    throw new IpfsServerError(hash, response.status);
+  }
+
+  return response;
 }
 
 function useTactDeployer({
@@ -43,7 +67,7 @@ function useTactDeployer({
   const tc = useClient();
   const isTestnet = useIsTestnet();
 
-  const { data, error, isLoading, isEnabled } = useQuery({
+  const { data, error, isLoading } = useQuery({
     enabled: !!tc && !!ipfsHash,
     queryKey: ["tactDeploy", ipfsHash, isTestnet],
     queryFn: async () => {
@@ -74,9 +98,18 @@ function useTactDeployer({
         hasProof,
       };
     },
+    retry: (failureCount, error) => {
+      // Don't retry for 4xx errors (not found, etc.)
+      if (error instanceof IpfsNotFoundError) {
+        return false;
+      }
+      // Retry up to 2 times for server errors
+      return failureCount < 2;
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
-  return { data, error, isLoading, isEnabled };
+  return { data, error, isLoading };
 }
 
 function useDeployContract(value: string, stateInit?: StateInit, address?: Address) {
@@ -109,7 +142,7 @@ function useDeployContract(value: string, stateInit?: StateInit, address?: Addre
 }
 
 export function ContractBlock() {
-  const { data, error, isLoading, isEnabled } = useTactDeployer({ workchain: 0 });
+  const { data, error, isLoading } = useTactDeployer({ workchain: 0 });
 
   const dataRows = useMemo<DataRowItem[]>(() => {
     if (!data) return [];
@@ -137,7 +170,7 @@ export function ContractBlock() {
     ];
   }, [data]);
 
-  return isEnabled ? (
+  return (
     <DataBlock
       title="Contract"
       icon={contractIcon}
@@ -145,7 +178,7 @@ export function ContractBlock() {
       isLoading={isLoading}
       isFlexibleWrapper={true}
     />
-  ) : null;
+  );
 }
 
 function DeployBlock() {
@@ -159,7 +192,15 @@ function DeployBlock() {
   let statusText: string | JSX.Element = "";
 
   if (error) {
-    statusText = error.toString();
+    if (error instanceof IpfsNotFoundError) {
+      statusText =
+        "The requested Tact package could not be found in IPFS. Please verify the package hash.";
+    } else if (error instanceof IpfsServerError) {
+      statusText =
+        "Failed to fetch the Tact package from IPFS due to a server error. Please try again later.";
+    } else {
+      statusText = `Error loading Tact package: ${error instanceof Error ? error.message : String(error)}`;
+    }
   } else if (data?.isDeployed) {
     statusText = (
       <div>
@@ -304,25 +345,53 @@ export function TactDeployer() {
   const { data, error, isLoading } = useTactDeployer({ workchain: 0 });
   const isTestnet = useIsTestnet();
 
+  let errorMessage = "";
+  if (error) {
+    if (error instanceof IpfsNotFoundError) {
+      errorMessage =
+        "The requested Tact package could not be found in IPFS. Please verify the package hash.";
+    } else if (error instanceof IpfsServerError) {
+      errorMessage =
+        "Failed to fetch the Tact package from IPFS due to a server error. Please try again later.";
+    } else {
+      errorMessage = `Error loading Tact package: ${error instanceof Error ? error.message : String(error)}`;
+    }
+  }
+
   return (
     <Box>
       {isTestnet && <TestnetBar />}
       <TopBar />
       <ContentBox px={headerSpacings ? "20px" : 0}>
-        {isLoading && (
-          <FlexBoxColumn sx={{ marginTop: 3 }}>
-            <Skeleton height={330} variant="rounded" sx={{ marginBottom: 3 }} />
-            <Skeleton height={280} variant="rounded" />
-          </FlexBoxColumn>
-        )}
-        {!isLoading && (
-          <>
-            <ContractDataBox isMobile={isSmallScreen}>
-              <ContractBlock />
-            </ContractDataBox>
-            <DeployBlock />
-          </>
-        )}
+        <>
+          {isLoading && (
+            <FlexBoxColumn sx={{ marginTop: 3 }}>
+              <Skeleton height={330} variant="rounded" sx={{ marginBottom: 3 }} />
+              <Skeleton height={280} variant="rounded" />
+            </FlexBoxColumn>
+          )}
+          {!isLoading && error && (
+            <FlexBoxColumn sx={{ marginTop: 3 }}>
+              <AppNotification
+                type={NotificationType.ERROR}
+                title={<>Error</>}
+                notificationBody={
+                  <CenteringBox sx={{ overflow: "auto", maxHeight: 300 }}>
+                    <NotificationTitle sx={{ marginBottom: 0 }}>{errorMessage}</NotificationTitle>
+                  </CenteringBox>
+                }
+              />
+            </FlexBoxColumn>
+          )}
+          {!isLoading && !error && (
+            <>
+              <ContractDataBox isMobile={isSmallScreen}>
+                <ContractBlock />
+              </ContractDataBox>
+              <DeployBlock />
+            </>
+          )}
+        </>
       </ContentBox>
       )
       <Footer />
