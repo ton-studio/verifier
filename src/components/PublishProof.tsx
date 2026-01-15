@@ -204,7 +204,7 @@ export function PublishProof({ contractAddress, missingProofs }: PublishProofPro
                   {missingProofs.map((verifier) => {
                     const ready = !!entries[verifier.name]?.data?.result?.msgCell;
                     return (
-                      <VerifierRow key={verifier.id}>
+                      <VerifierRow key={verifier.id} sx={{ justifyContent: "flex-start" }}>
                         <Checkbox
                           disabled={!ready || disableSelection}
                           checked={!!selected[verifier.name] && ready}
