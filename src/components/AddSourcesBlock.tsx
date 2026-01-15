@@ -18,6 +18,7 @@ import { useTonAddress } from "@tonconnect/ui-react";
 import ConnectButton from "./ConnectButton";
 import { VerifierWithId } from "../lib/wrappers/verifier-registry";
 import { ContractProofData } from "../lib/useLoadContractProof";
+import { getValidSources } from "../lib/getSourcesData";
 
 const ContentBox = styled(Box)({
   padding: "15px 24px",
@@ -57,13 +58,14 @@ export function AddSourcesBlock({
 
   const onSectionExpand = () => toggleSection(SECTIONS.SOURCES);
 
-  const canPrefill = !!availableProof?.files?.length;
+  const validFiles = getValidSources(availableProof?.files);
+  const canPrefill = validFiles.length > 0;
 
   const handlePrefill = async () => {
-    if (!availableProof?.files?.length) return;
+    if (validFiles.length === 0) return;
     resetFiles();
 
-    const generatedFiles = availableProof.files.map((file) => {
+    const generatedFiles = validFiles.map((file) => {
       const segments = file.name.split("/");
       const baseName = segments.pop() ?? file.name;
       const generated = new File([file.content], baseName, { type: "text/plain" });

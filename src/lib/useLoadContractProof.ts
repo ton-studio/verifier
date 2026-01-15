@@ -3,12 +3,11 @@ import { useQuery } from "@tanstack/react-query";
 import { Sha256 } from "@aws-crypto/sha256-js";
 import { useLoadContractInfo } from "./useLoadContractInfo";
 import "@ton-community/contract-verifier-sdk";
-import { SourcesData } from "@ton-community/contract-verifier-sdk";
 import { useContractAddress } from "./useContractAddress";
 import { useIsTestnet } from "../components/TestnetBar";
 import { useLoadVerifierRegistryInfo } from "./useLoadVerifierRegistryInfo";
 import { VerifierWithId } from "./wrappers/verifier-registry";
-import { getSourcesData } from "./getSourcesData";
+import { getSourcesData, SourcesData } from "./getSourcesData";
 
 export const toSha256Buffer = (s: string) => {
   const sha = new Sha256();

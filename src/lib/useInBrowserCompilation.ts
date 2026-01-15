@@ -9,7 +9,8 @@ import {
 } from "./useLoadContractProof";
 import { useLoadContractInfo } from "./useLoadContractInfo";
 import { useState } from "react";
-import { FuncCompilerSettings, SourcesData } from "@ton-community/contract-verifier-sdk";
+import { FuncCompilerSettings } from "@ton-community/contract-verifier-sdk";
+import { getValidSources } from "./getSourcesData";
 import { AnalyticsAction, sendAnalyticsEvent } from "./googleAnalytics";
 import { useLoadVerifierRegistryInfo } from "./useLoadVerifierRegistryInfo";
 
@@ -57,11 +58,10 @@ export function useInBrowserCompilation() {
 
     const proof = getFirstAvailableProof(proofs);
 
-    const sources: SourceEntry[] =
-      proof?.files?.map((file: SourcesData["files"][number]) => ({
-        filename: file.name,
-        content: file.content,
-      })) ?? [];
+    const sources: SourceEntry[] = getValidSources(proof?.files).map((file) => ({
+      filename: file.name,
+      content: file.content,
+    }));
 
     const funcVersion = (proof?.compilerSettings as FuncCompilerSettings)?.funcVersion;
 

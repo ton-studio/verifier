@@ -1,10 +1,11 @@
 import { useLoadContractSourceCode } from "../lib/useLoadContractSourceCode";
-import React from "react";
-import { SourcesData } from "@ton-community/contract-verifier-sdk";
+import React, { useMemo } from "react";
+import { ContractProofData } from "../lib/useLoadContractProof";
+import { getValidSources } from "../lib/getSourcesData";
 
 interface VerifiedSourceCodeProps {
   button: React.ReactNode;
-  proofData?: Partial<SourcesData>;
+  proofData?: ContractProofData;
   domIds: {
     containerId: string;
     filesId: string;
@@ -13,7 +14,13 @@ interface VerifiedSourceCodeProps {
 }
 
 export function VerifiedSourceCode({ button, proofData, domIds }: VerifiedSourceCodeProps) {
-  useLoadContractSourceCode(proofData, {
+  const dataForSourceCode = useMemo(() => {
+    if (!proofData) return undefined;
+    const validFiles = getValidSources(proofData.files);
+    return { ...proofData, files: validFiles };
+  }, [proofData]);
+
+  useLoadContractSourceCode(dataForSourceCode, {
     containerSelector: `#${domIds.containerId}`,
     fileListSelector: `#${domIds.filesId}`,
     contentSelector: `#${domIds.contentId}`,

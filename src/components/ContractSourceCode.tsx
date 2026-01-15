@@ -15,8 +15,8 @@ import { Getters } from "./Getters";
 import { useLoadVerifierRegistryInfo } from "../lib/useLoadVerifierRegistryInfo";
 import { useContractAddress } from "../lib/useContractAddress";
 import { useSyncGetters } from "../lib/getter/useGetters";
-import { SourcesData } from "@ton-community/contract-verifier-sdk";
 import { ContractProofData, useLoadContractProof } from "../lib/useLoadContractProof";
+import { getValidSources } from "../lib/getSourcesData";
 
 const TitleWrapper = styled(CenteringBox)({
   justifyContent: "space-between",
@@ -185,7 +185,8 @@ function ContractSourceCode() {
                 height={modifiedCodeBlock ? 30 : 37}
                 width={modifiedCodeBlock ? 30 : 167}
                 onClick={() => {
-                  activeProof?.files?.length && downloadSources(activeProof.files);
+                  const validFiles = getValidSources(activeProof?.files);
+                  validFiles.length && downloadSources(validFiles);
                 }}>
                 <img src={download} alt="Download icon" width={19} height={19} />
                 {modifiedCodeBlock ? "" : "Download sources"}
@@ -254,7 +255,8 @@ function VerifierGettersPanel({
   proof: ContractProofData;
   isVisible: boolean;
 }) {
-  useSyncGetters(getterKey, proof?.files);
+  const validSources = useMemo(() => getValidSources(proof?.files), [proof?.files]);
+  useSyncGetters(getterKey, validSources);
   return (
     <Box sx={{ display: isVisible ? "block" : "none" }}>
       <Getters getterKey={getterKey} />

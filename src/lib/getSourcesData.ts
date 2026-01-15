@@ -15,7 +15,17 @@ export type MissingSource = {
   error: string;
 };
 
-type SourceFile = TactSource | FuncSource | TolkSource | MissingSource;
+export type SourceFile = TactSource | FuncSource | TolkSource | MissingSource;
+
+export function isMissingSource(source: SourceFile): source is MissingSource {
+  return "error" in source;
+}
+
+export type ValidSource = TactSource | FuncSource | TolkSource;
+
+export function getValidSources(files: SourceFile[] | undefined): ValidSource[] {
+  return (files ?? []).filter((f): f is ValidSource => !isMissingSource(f));
+}
 
 export interface SourcesData {
   files: SourceFile[];
