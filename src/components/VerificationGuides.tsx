@@ -97,7 +97,7 @@ export function InBrowserVerificationGuide() {
 
   return (
     <Box p={2}>
-      <Typography sx={{ fontSize: 14 }}>
+      <Typography sx={{ fontSize: 14, marginBottom: 2 }}>
         You are not required to rely on third-party validators. You can now verify this contract by
         yourself by having your browser download the sources and compile them locally in-browser
         using{" "}

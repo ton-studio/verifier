@@ -8,6 +8,7 @@ import { useContractAddress } from "./useContractAddress";
 import { useIsTestnet } from "../components/TestnetBar";
 import { useLoadVerifierRegistryInfo } from "./useLoadVerifierRegistryInfo";
 import { VerifierWithId } from "./wrappers/verifier-registry";
+import { getSourcesData } from "./getSourcesData";
 
 export const toSha256Buffer = (s: string) => {
   const sha = new Sha256();
@@ -43,13 +44,7 @@ export async function loadProofData(
     return { hasOnchainProof: false, ipfsLink };
   }
 
-  const sourcesData = await ContractVerifier.getSourcesData(ipfsLink, {
-    testnet: isTestnet,
-    ipfsConverter: (ipfsUrl: string) => {
-      const endpoint = "https://ipfs.ton.org/ipfs/";
-      return ipfsUrl.replace("ipfs://", endpoint);
-    },
-  });
+  const sourcesData = await getSourcesData(ipfsLink);
   return {
     hasOnchainProof: true,
     ...sourcesData,
