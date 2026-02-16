@@ -13,6 +13,7 @@ export function useLoadVerifierRegistryInfo() {
   return useQuery<Record<string, VerifierWithId>>({
     enabled: !!sourceRegistryData && !!tc,
     queryKey: ["verifierRegistry", sourceRegistryData?.verifierRegistry],
+    refetchOnMount: false,
     queryFn: async () => {
       if (!tc) throw new Error("Client is not initialized");
       const contract = tc.open(

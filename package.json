@@ -19,7 +19,7 @@
     "@emotion/styled": "^11.10.4",
     "@mui/icons-material": "^5.10.9",
     "@mui/material": "^5.10.10",
-    "@orbs-network/ton-access": "^2.3.3",
+    "@klpx/ton-access": "2.3.1",
     "@tact-lang/compiler": "^1.1.2",
     "@tanstack/react-query": "^5.90.12",
     "@ton-community/contract-verifier-sdk": "1.4.0",
@@ -58,6 +58,9 @@
     "tvm-disassembler": "^2.0.2",
     "web-tree-sitter": "^0.20.7",
     "zustand": "^4.1.3"
+  },
+  "overrides": {
+    "@orbs-network/ton-access": "npm:@klpx/ton-access@2.3.1"
   },
   "devDependencies": {
     "@types/file-saver": "^2.0.5",

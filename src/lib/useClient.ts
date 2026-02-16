@@ -1,6 +1,6 @@
 import { Address, TonClient } from "ton";
-import { getHttpEndpoint } from "@orbs-network/ton-access";
-import { useEffect, useMemo, useState } from "react";
+import { getHttpEndpoint } from "@klpx/ton-access";
+import { useMemo } from "react";
 import { useIsTestnet } from "../components/TestnetBar";
 import { useQuery } from "@tanstack/react-query";
 
@@ -19,6 +19,7 @@ export function useClient() {
   const isTestnet = useIsTestnet();
   const { data, isLoading, error } = useQuery({
     queryKey: ["getHttpEndpoint", isTestnet],
+    refetchOnMount: false,
     queryFn: async () => getHttpEndpoint({ network: isTestnet ? "testnet" : "mainnet" }),
   });
   const client = useMemo(() => {

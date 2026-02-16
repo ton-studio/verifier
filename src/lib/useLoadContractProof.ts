@@ -8,6 +8,7 @@ import { useIsTestnet } from "../components/TestnetBar";
 import { useLoadVerifierRegistryInfo } from "./useLoadVerifierRegistryInfo";
 import { VerifierWithId } from "./wrappers/verifier-registry";
 import { getSourcesData, SourcesData } from "./getSourcesData";
+import { getHttpV4Endpoint } from "@klpx/ton-access";
 
 export const toSha256Buffer = (s: string) => {
   const sha = new Sha256();
@@ -23,6 +24,9 @@ export async function getProofIpfsLink(
   return ContractVerifier.getSourcesJsonUrl(hash, {
     verifier,
     testnet: isTestnet,
+    httpApiEndpointV4: await getHttpV4Endpoint({
+      network: isTestnet ? "testnet" : "mainnet",
+    }),
   });
 }
 
@@ -103,7 +107,8 @@ export function useLoadContractProof() {
     queryKey: [contractAddress, verifierEntries.map(([id]) => id).join("|"), isTestnet, "proofs"],
     enabled:
       !!contractAddress && !!contractInfo?.codeCellToCompileBase64 && verifierEntries.length > 0,
-    retry: 2,
+    retry: 3,
+    refetchOnMount: false,
     queryFn: async () => {
       const map = new Map<string, ContractProofData>();
       if (!contractAddress || !contractInfo?.codeCellToCompileBase64) {

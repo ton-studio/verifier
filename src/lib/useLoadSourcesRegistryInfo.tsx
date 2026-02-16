@@ -11,6 +11,7 @@ export function useLoadSourcesRegistryInfo() {
   return useQuery({
     queryKey: ["sourcesRegistry", address],
     enabled: !!tc,
+    refetchOnMount: false,
     queryFn: async () => {
       if (!tc) throw new Error("Client is not initialized");
 

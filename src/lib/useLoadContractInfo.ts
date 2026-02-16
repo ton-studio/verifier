@@ -43,6 +43,7 @@ export function useLoadContractInfo(): {
   const { isLoading, error, data } = useQuery<ContractInfo | null>({
     queryKey: [contractAddress, "info"],
     enabled: !!client,
+    refetchOnMount: false,
     queryFn: async () => {
       if (!client) throw new Error("Client is not initialized");
       if (!contractAddress) return null;
