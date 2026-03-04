@@ -10,13 +10,14 @@ import { CenteringBox, DataBox, IconBox, TitleBox, TitleText } from "./Common.st
 
 interface VerificationRulesProps {
   makeFlexible?: boolean;
-  isMobile: boolean;
 }
 
-const VerificationRules = styled(CenteringBox)(({ theme }) => (props: VerificationRulesProps) => ({
-  flexWrap: props.makeFlexible ? "wrap" : "inherit",
-  gap: props.makeFlexible ? 20 : "inherit",
-  justifyContent: props.makeFlexible ? "center" : "space-between",
+const VerificationRules = styled(CenteringBox, {
+  shouldForwardProp: (prop) => prop !== "makeFlexible",
+})<VerificationRulesProps>(({ theme, makeFlexible }) => ({
+  flexWrap: makeFlexible ? "wrap" : "inherit",
+  gap: makeFlexible ? 20 : "inherit",
+  justifyContent: makeFlexible ? "center" : "space-between",
   padding: 24,
   [theme.breakpoints.down("lg")]: {
     width: "70%",
@@ -69,7 +70,6 @@ const verificationRules: Rule[] = [
 export const VerificationInfoBlock = () => {
   const theme = useTheme();
   const headerSpacings = useMediaQuery(theme.breakpoints.down("lg"));
-  const isSmallScreen = useMediaQuery(theme.breakpoints.down("md"));
   const isExtraSmallScreen = useMediaQuery("(max-width: 450px)");
 
   return (
@@ -89,10 +89,7 @@ export const VerificationInfoBlock = () => {
           </CenteringBox>
         </CenteringBox>
       </TitleBox>
-      <VerificationRules
-        makeFlexible={headerSpacings}
-        isMobile={isSmallScreen}
-        sx={{ flexWrap: "wrap", gap: "5px" }}>
+      <VerificationRules makeFlexible={headerSpacings} sx={{ flexWrap: "wrap", gap: "5px" }}>
         {verificationRules.map((rule) => (
           <VerificationRule key={rule.description}>
             <CenteringWrapper sx={{ alignSelf: "flex-start" }} mr={1.5}>

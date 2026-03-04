@@ -10,8 +10,10 @@ interface ContractDataBoxProps {
   isMobile?: boolean;
 }
 
-export const ContractDataBox = styled(Box)((props: ContractDataBoxProps) => ({
-  display: props.isMobile ? "inherit" : "flex",
+export const ContractDataBox = styled(Box, {
+  shouldForwardProp: (prop) => prop !== "isMobile",
+})<ContractDataBoxProps>(({ isMobile }) => ({
+  display: isMobile ? "inherit" : "flex",
   gap: 20,
 }));
 

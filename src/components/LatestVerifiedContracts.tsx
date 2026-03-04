@@ -33,7 +33,7 @@ const ContractsList = styled(Box)({
   justifyContent: "left",
   overflow: "auto",
   marginTop: 24,
-  "-webkit-text-size-adjust": "100%",
+  WebkitTextSizeAdjust: "100%",
 });
 
 const AddressText = styled(Box)({
@@ -66,8 +66,9 @@ export function LatestVerifiedContracts() {
       </Typography>
       <ContractsList>
         {isLoading &&
-          skeletons.current.map((width: number) => (
+          skeletons.current.map((width: number, index: number) => (
             <Skeleton
+              key={`latest-contract-skeleton-${index}`}
               sx={{ borderRadius: 2 }}
               variant="rectangular"
               width={400 + width}
@@ -81,6 +82,7 @@ export function LatestVerifiedContracts() {
             contract.timestamp && new Date(contract.timestamp * 1000).toLocaleDateString();
           return (
             <Contract
+              key={contract.address}
               onClick={(e) => {
                 navigate(`/${contract.address}`);
               }}>

@@ -63,12 +63,18 @@ const renderRowValue = (
       <>{children}</>
     );
 
-  return (
-    <WrappingTooltip>
+  const content = (
+    <>
       <WrappingLink>{value ?? "-"}</WrappingLink>
-      <Box sx={{ fontSize: 12, opacity: 0.8 }}>{subtitle ?? ""}</Box>
-    </WrappingTooltip>
+      {subtitle && (
+        <Box component="span" sx={{ fontSize: 12, opacity: 0.8, display: "inline-block" }}>
+          {subtitle}
+        </Box>
+      )}
+    </>
   );
+
+  return <WrappingTooltip>{content}</WrappingTooltip>;
 };
 
 export function DataBlock({

@@ -1,4 +1,4 @@
-import { Box, Skeleton, Typography, useTheme, useMediaQuery, styled } from "@mui/material";
+import { Box, Skeleton, Typography, styled } from "@mui/material";
 import React from "react";
 import { useLoadVerifierRegistryInfo } from "../lib/useLoadVerifierRegistryInfo";
 import { CenteringBox } from "./Common.styled";
@@ -46,7 +46,6 @@ export function VerifierListBlock() {
   const { data, isLoading, isEnabled } = useLoadVerifierRegistryInfo();
   const verifiers = Object.entries(data ?? {});
   const hasVerifiers = verifiers.length > 0;
-  const theme = useTheme();
 
   return (
     <ContractsWrapper>
@@ -67,8 +66,8 @@ export function VerifierListBlock() {
             gap: 2,
           }}>
           {verifiers.map(([id, config]) => (
-            <Box sx={{ minWidth: "200px", maxWidth: "500px" }}>
-              <VerifierCard key={id} verifierId={id} config={config} />
+            <Box key={id} sx={{ minWidth: "200px", maxWidth: "500px" }}>
+              <VerifierCard verifierId={id} config={config} />
             </Box>
           ))}
         </Box>
