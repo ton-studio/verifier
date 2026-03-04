@@ -1,5 +1,5 @@
 import { SourceEntry } from "@ton-community/func-js";
-import { Cell } from "ton";
+import { Cell } from "@ton/ton";
 import { isWebAssemblySupported } from "../utils/generalUtils";
 import {
   ContractProofData,
@@ -9,7 +9,7 @@ import {
 } from "./useLoadContractProof";
 import { useLoadContractInfo } from "./useLoadContractInfo";
 import { useState } from "react";
-import { FuncCompilerSettings } from "@ton-community/contract-verifier-sdk";
+import { FuncCompilerSettings } from "../types/compiler";
 import { getValidSources } from "./getSourcesData";
 import { AnalyticsAction, sendAnalyticsEvent } from "./googleAnalytics";
 import { useLoadVerifierRegistryInfo } from "./useLoadVerifierRegistryInfo";

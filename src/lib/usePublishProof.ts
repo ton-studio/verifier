@@ -1,4 +1,4 @@
-import { Cell, Address, toNano } from "ton";
+import { Cell, Address, toNano } from "@ton/ton";
 import { getProofIpfsLink } from "./useLoadContractProof";
 import { useLoadContractInfo } from "./useLoadContractInfo";
 import { useSendTXN } from "./useSendTxn";
@@ -6,6 +6,7 @@ import { AnalyticsAction, sendAnalyticsEvent } from "./googleAnalytics";
 import { useEffect, useState } from "react";
 import { useLoadSourcesRegistryInfo } from "./useLoadSourcesRegistryInfo";
 import { useIsTestnet } from "../components/TestnetBar";
+import { useClient, useSourcesRegistryAddress } from "./useClient";
 
 type PublishPayload = {
   verifier: string;
@@ -17,6 +18,9 @@ export function usePublishProof() {
   const { data: sourcesRegistryData } = useLoadSourcesRegistryInfo();
   const isTestnet = useIsTestnet();
   const [verifiersInFlight, setVerifiersInFlight] = useState<string[]>([]);
+  const tonClient = useClient();
+  const fallbackSourcesRegistry = useSourcesRegistryAddress();
+  const sourcesRegistryAddress = sourcesRegistryData?.address ?? fallbackSourcesRegistry;
 
   const { sendTXN, data, clearTXN } = useSendTXN("publishProof", async (count: number) => {
     if (!contractInfo?.codeCellToCompileBase64) {
@@ -32,7 +36,10 @@ export function usePublishProof() {
 
     const proofs = await Promise.all(
       verifiersInFlight.map((verifier) =>
-        getProofIpfsLink(contractInfo.codeCellToCompileBase64, verifier, isTestnet),
+        getProofIpfsLink(contractInfo.codeCellToCompileBase64, verifier, isTestnet, {
+          tonClient,
+          sourcesRegistry: sourcesRegistryAddress,
+        }),
       ),
     );
 

@@ -14,7 +14,7 @@ import {
   FuncCompilerSettings,
   TactCliCompileSettings,
   TolkCliCompileSettings,
-} from "@ton-community/contract-verifier-sdk";
+} from "../types/compiler";
 import { useMemo } from "react";
 import compilerIcon from "../assets/compiler.svg";
 import { CopyHash } from "./CopyHash";

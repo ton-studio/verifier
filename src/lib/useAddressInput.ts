@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import useNotification from "./useNotification";
-import { Address } from "ton";
+import { Address } from "@ton/ton";
 import create from "zustand";
 import { useNavigatePreserveQuery } from "./useNavigatePreserveQuery";
 

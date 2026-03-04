@@ -1,4 +1,4 @@
-import { Address, fromNano, Cell, CellType, BitReader, beginCell, BitString } from "ton";
+import { Address, fromNano, Cell, CellType, BitReader } from "@ton/ton";
 import { useQuery } from "@tanstack/react-query";
 
 import { fromCode } from "tvm-disassembler";

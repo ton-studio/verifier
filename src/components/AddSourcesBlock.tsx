@@ -120,7 +120,9 @@ export function AddSourcesBlock({
                   <CompilerSettings canPublish={canPublish} />
                 </>
               )}
-              {(data || error) && <CompileOutput contractAddress={contractAddress} />}
+              {(data || error) && (
+                <CompileOutput contractAddress={contractAddress} verifier={activeVerifierName} />
+              )}
               {hasFiles() && (
                 <CenteringBox sx={{ justifyContent: "center" }} mt={3} mb="9px">
                   {!walletAddress ? (

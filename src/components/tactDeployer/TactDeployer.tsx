@@ -1,5 +1,5 @@
-import { Address, Cell, contractAddress, StateInit, toNano } from "ton";
-import { useClient } from "../../lib/useClient";
+import { Address, Cell, contractAddress, StateInit, toNano } from "@ton/ton";
+import { useClient, useSourcesRegistryAddress } from "../../lib/useClient";
 import { useSendTXN } from "../../lib/useSendTxn";
 import { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
@@ -66,6 +66,7 @@ function useTactDeployer({
 }) {
   const { ipfsHash } = useParams();
   const tc = useClient();
+  const sourcesRegistryAddress = useSourcesRegistryAddress();
   const isTestnet = useIsTestnet();
 
   const { data, error, isLoading } = useQuery({
@@ -91,7 +92,12 @@ function useTactDeployer({
       const codeCellHash = codeCell.hash().toString("base64");
 
       const isDeployed = await tc.isContractDeployed(address);
-      const hasProof = isDeployed && (await getProofIpfsLink(codeCellHash, verifier, isTestnet));
+      const hasProof =
+        isDeployed &&
+        (await getProofIpfsLink(codeCellHash, verifier, isTestnet, {
+          tonClient: tc,
+          sourcesRegistry: sourcesRegistryAddress,
+        }));
 
       return {
         address,

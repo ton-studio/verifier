@@ -222,9 +222,7 @@ function ContractSourceCode() {
                   button={
                     <CopyButton
                       onCopy={() =>
-                        handleCopy(
-                          `#${tab.domIds!.contentId} > pre > code > .contract-verifier-code-content`,
-                        )
+                        handleCopy(`#${tab.domIds!.contentId} .contract-verifier-code-copy`)
                       }
                     />
                   }

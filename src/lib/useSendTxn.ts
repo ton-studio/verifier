@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Address, Cell, StateInit } from "ton";
+import { Address, Cell, StateInit } from "@ton/ton";
 import create from "zustand";
 import { useRequestTXN } from "../hooks";
 

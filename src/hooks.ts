@@ -1,5 +1,5 @@
 import { SendTransactionRequest, useTonConnectUI } from "@tonconnect/ui-react";
-import { Cell, StateInit, beginCell, storeStateInit } from "ton";
+import { Cell, StateInit, beginCell, storeStateInit } from "@ton/ton";
 
 type WalletMessage = {
   to: string;

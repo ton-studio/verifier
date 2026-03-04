@@ -1,5 +1,5 @@
 import InfoPiece from "../InfoPiece";
-import { Address, beginCell, Cell, toNano } from "ton";
+import { Address, beginCell, Cell, toNano } from "@ton/ton";
 import Button from "../Button";
 import { useEffect, useState } from "react";
 import { Stack, Box, Snackbar, Alert, CircularProgress } from "@mui/material";

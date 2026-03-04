@@ -1,6 +1,6 @@
 import InfoPiece from "../InfoPiece";
 import { useLoadVerifierRegistryInfo } from "../../lib/useLoadVerifierRegistryInfo";
-import { Dictionary, beginCell, toNano, DictionaryValue, Slice, Address } from "ton";
+import { Dictionary, beginCell, toNano, DictionaryValue, Slice, Address } from "@ton/ton";
 import { toBigIntBE } from "bigint-buffer";
 import { useMemo } from "react";
 import { Stack, Grid, CircularProgress, Alert } from "@mui/material";

@@ -16,7 +16,7 @@ import {
   TactVersion,
   TolkCliCompileSettings,
   TolkVersion,
-} from "@ton-community/contract-verifier-sdk";
+} from "../types/compiler";
 import { useRemoteConfig } from "../lib/useRemoteConfig";
 import { tactVersionToLink } from "../utils/linkUtils";
 

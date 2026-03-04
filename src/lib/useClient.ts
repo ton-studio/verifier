@@ -1,8 +1,7 @@
-import { Address, TonClient } from "ton";
-import { getHttpEndpoint } from "@klpx/ton-access";
+import { Address, TonClient } from "@ton/ton";
 import { useMemo } from "react";
 import { useIsTestnet } from "../components/TestnetBar";
-import { useQuery } from "@tanstack/react-query";
+import { getToncenterClientParams } from "./toncenter";
 
 export function useSourcesRegistryAddress() {
   const isTestnet = useIsTestnet();
@@ -17,17 +16,8 @@ export function useSourcesRegistryAddress() {
 
 export function useClient() {
   const isTestnet = useIsTestnet();
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["getHttpEndpoint", isTestnet],
-    refetchOnMount: false,
-    queryFn: async () => getHttpEndpoint({ network: isTestnet ? "testnet" : "mainnet" }),
-  });
-  const client = useMemo(() => {
-    return data ? new TonClient({ endpoint: data }) : null;
-  }, [data]);
-
-  if (!isLoading && !data) {
-    throw error;
-  }
-  return client;
+  return useMemo(() => {
+    const params = getToncenterClientParams(isTestnet);
+    return new TonClient(params);
+  }, [isTestnet]);
 }

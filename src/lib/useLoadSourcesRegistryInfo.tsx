@@ -1,5 +1,5 @@
 import { useClient, useSourcesRegistryAddress } from "./useClient";
-import { Cell } from "ton";
+import { Cell } from "@ton/ton";
 import { useQuery } from "@tanstack/react-query";
 import { getAdmin } from "./getAdmin";
 import { SourcesRegistry as SourcesRegistryContract } from "./wrappers/sources-registry";

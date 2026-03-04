@@ -10,7 +10,7 @@ import {
   Dictionary,
   DictionaryValue,
   Slice,
-} from "ton-core";
+} from "@ton/core";
 
 export type Verifier = {
   admin: Address;

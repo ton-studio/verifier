@@ -11,6 +11,9 @@
     "prepare": "husky install",
     "analyze": "source-map-explorer 'dist/assets/*.js' --no-border-checks"
   },
+  "overrides": {
+    "ton-core": "npm:@ton/core@^0.60.0"
+  },
   "dependencies": {
     "@aws-crypto/sha256-js": "^2.0.2",
     "@dnd-kit/modifiers": "^6.0.0",
@@ -19,12 +22,12 @@
     "@emotion/styled": "^11.10.4",
     "@mui/icons-material": "^5.10.9",
     "@mui/material": "^5.10.10",
-    "@klpx/ton-access": "2.3.1",
     "@tact-lang/compiler": "^1.1.2",
     "@tanstack/react-query": "^5.90.12",
-    "@ton-community/contract-verifier-sdk": "1.4.0",
     "@ton-community/func-js": "^0.3.0",
     "@tonconnect/ui-react": "^1.0.0-beta.6",
+    "@ton/core": "^0.60.0",
+    "@ton/ton": "^13.9.0",
     "bigint-buffer": "^1.1.5",
     "buffer": "^6.0.3",
     "file-saver": "^2.0.5",
@@ -40,6 +43,8 @@
     "func-js-bin-0.4.5": "npm:@ton-community/func-js-bin@^0.4.5",
     "func-js-bin-0.4.6": "npm:@ton-community/func-js-bin@^0.4.6",
     "func-js-bin-0.4.6-wasmfix.0": "npm:@ton-community/func-js-bin@^0.4.6-wasmfix.0",
+    "highlight.js": "^11.9.0",
+    "highlightjs-func": "github:orbs-network/highlightjs-func",
     "immer": "^9.0.17",
     "javascript-time-ago": "^2.5.7",
     "jszip": "^3.10.1",
@@ -53,14 +58,9 @@
     "react-qr-code": "^2.0.8",
     "react-router-dom": "^6.4.2",
     "source-map-explorer": "^2.5.3",
-    "ton": "^13.9.0",
-    "ton-core": "^0.53.0",
     "tvm-disassembler": "^2.0.2",
     "web-tree-sitter": "^0.20.7",
     "zustand": "^4.1.3"
-  },
-  "overrides": {
-    "@orbs-network/ton-access": "npm:@klpx/ton-access@2.3.1"
   },
   "devDependencies": {
     "@types/file-saver": "^2.0.5",

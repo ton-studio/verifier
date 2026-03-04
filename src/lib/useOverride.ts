@@ -1,5 +1,5 @@
 import { useSearchParams } from "react-router-dom";
-import { Address } from "ton";
+import { Address } from "@ton/ton";
 import { getAdmin } from "./getAdmin";
 import { useClient } from "./useClient";
 import { useEffect, useState } from "react";

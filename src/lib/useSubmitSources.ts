@@ -1,8 +1,8 @@
 import { useLoadContractInfo } from "./useLoadContractInfo";
 import { useFileStore } from "./useFileStore";
 import { useCompilerSettingsStore } from "./useCompilerSettingsStore";
-import { Cell } from "ton";
-import { FuncCompilerSettings } from "@ton-community/contract-verifier-sdk";
+import { Cell } from "@ton/ton";
+import { FuncCompilerSettings } from "../types/compiler";
 import { AnalyticsAction, sendAnalyticsEvent } from "./googleAnalytics";
 import create from "zustand";
 import { useLoadVerifierRegistryInfo } from "./useLoadVerifierRegistryInfo";

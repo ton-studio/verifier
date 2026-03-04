@@ -1,13 +1,28 @@
 import {
   FiftCliCompileSettings,
   FuncCompilerSettings,
-  FuncSource,
   TactCliCompileSettings,
-  TactSource,
   TolkCliCompileSettings,
-  TolkSource,
-} from "@ton-community/contract-verifier-sdk";
+} from "../types/compiler";
 import { fetchIpfsContent } from "./fetchIpfsContent";
+
+export type FuncSource = {
+  name: string;
+  content: string;
+  isEntrypoint: boolean;
+};
+
+export type TactSource = {
+  name: string;
+  content: string;
+  isEntrypoint?: boolean;
+};
+
+export type TolkSource = {
+  name: string;
+  content: string;
+  isEntrypoint?: boolean;
+};
 
 export type MissingSource = {
   name: string;

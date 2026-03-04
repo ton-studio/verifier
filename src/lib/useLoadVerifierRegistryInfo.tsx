@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Address } from "ton";
+import { Address } from "@ton/ton";
 import { useClient } from "./useClient";
 import {
   VerifierRegistry as VerifierRegistryContract,

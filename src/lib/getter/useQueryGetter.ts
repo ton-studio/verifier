@@ -1,11 +1,11 @@
 import { useMutation } from "@tanstack/react-query";
-import { Address, Cell, fromNano } from "ton";
+import { Address, Cell, fromNano } from "@ton/ton";
 import { useClient } from "../useClient";
 import { sendAnalyticsEvent, AnalyticsAction } from "../googleAnalytics";
 import { makeGetCall } from "../makeGetCall";
 import { useContractAddress } from "../useContractAddress";
 import { StateGetter } from "./useGetters";
-import { beginCell } from "ton";
+import { beginCell } from "@ton/ton";
 
 export type PossibleRepresentation = "address" | "coins" | "base64" | "boc" | "int" | "raw" | "hex";
 
