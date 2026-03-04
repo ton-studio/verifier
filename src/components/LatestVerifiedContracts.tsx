@@ -1,17 +1,20 @@
 import { Box, Skeleton, styled, Typography } from "@mui/material";
 import { useLoadLatestVerified } from "../lib/useLoadLatestVerified";
 import { useRef } from "react";
-import { useNavigatePreserveQuery } from "../lib/useNavigatePreserveQuery";
 import { useLoadVerifierRegistryInfo } from "../lib/useLoadVerifierRegistryInfo";
 import { CopyHash } from "./CopyHash";
+import { Link as RouterLink, useLocation } from "react-router-dom";
 
-const Contract = styled(Box)(({ theme }) => ({
+const Contract = styled(RouterLink)(({ theme }) => ({
+  display: "block",
   background: "white",
   padding: "16px 20px",
   borderRadius: 10,
   boxShadow: "rgb(114 138 150 / 8%) 0px 2px 16px",
   border: "0.5px solid rgba(114, 138, 150, 0.24)",
   cursor: "pointer",
+  textDecoration: "none",
+  color: "inherit",
   [theme.breakpoints.down("sm")]: {
     width: 280,
   },
@@ -56,8 +59,13 @@ const CompilerText = styled(Box)({
 export function LatestVerifiedContracts() {
   const { data: latestVerifiedContracts, isLoading } = useLoadLatestVerified();
   const { data: verifierRegistry } = useLoadVerifierRegistryInfo();
-  const navigate = useNavigatePreserveQuery();
+  const location = useLocation();
   const skeletons = useRef(new Array(30).fill(null).map((_) => Math.random() * 100));
+  const createContractLink = (address: string) => ({
+    pathname: `/${address}`,
+    search: location.search,
+    hash: location.hash,
+  });
 
   return (
     <ContractsWrapper>
@@ -81,11 +89,7 @@ export function LatestVerifiedContracts() {
           const verifiedDate =
             contract.timestamp && new Date(contract.timestamp * 1000).toLocaleDateString();
           return (
-            <Contract
-              key={contract.address}
-              onClick={(e) => {
-                navigate(`/${contract.address}`);
-              }}>
+            <Contract key={contract.address} to={createContractLink(contract.address)}>
               <AddressText>{contract.address}</AddressText>
               <div style={{ display: "flex", alignItems: "center", marginTop: 6.5 }}>
                 <Typography

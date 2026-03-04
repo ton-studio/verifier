@@ -2,6 +2,7 @@ import { styled } from "@mui/material/styles";
 import { Box, Link } from "@mui/material";
 import { contentMaxWidth } from "../const";
 import { CenteringBox } from "./Common.styled";
+import { Link as RouterLink } from "react-router-dom";
 
 const expandedHeaderHeight = 250;
 const headerHeight = 188;
@@ -31,14 +32,18 @@ const ContentColumn = styled(CenteringBox)(() => ({
   gap: 10,
 }));
 
-const LinkWrapper = styled(Link)(() => ({
+const linkWrapperStyles = {
   display: "flex",
   alignItems: "center",
   gap: 10,
   color: "#000",
   textDecoration: "none",
   cursor: "pointer",
-}));
+};
+
+const LinkWrapper = styled(Link)(() => linkWrapperStyles);
+
+const RouterLinkWrapper = styled(RouterLink)(() => linkWrapperStyles);
 
 const TopBarContent = styled(CenteringBox)(({ theme }) => ({
   margin: "auto",
@@ -80,6 +85,7 @@ const SearchWrapper = styled(CenteringBox)({
 export {
   SearchWrapper,
   LinkWrapper,
+  RouterLinkWrapper,
   AppLogo,
   TopBarWrapper,
   TopBarContent,

@@ -10,7 +10,7 @@ import {
   SocialsContent,
   SocialsWrapper,
 } from "./Footer.styled";
-import { AppLogo, LinkWrapper } from "./TopBar.styled";
+import { AppLogo, LinkWrapper, RouterLinkWrapper } from "./TopBar.styled";
 import { Typography, useMediaQuery } from "@mui/material";
 import heart from "../assets/heart.svg";
 import orbsLogo from "../assets/orbs.svg";
@@ -21,16 +21,21 @@ import githubHovered from "../assets/github-hover.svg";
 import { HoverableIcon } from "./HoverableIcon";
 import icon from "../assets/icon.svg";
 import { CenteringBox } from "./Common.styled";
-import { useNavigatePreserveQuery } from "../lib/useNavigatePreserveQuery";
 import { useIsTestnet, useSwitchNetwork } from "./TestnetBar";
+import { useLocation } from "react-router-dom";
 
 export const TELEGRAM_SUPPORT_LINK = "https://t.me/tonverifier";
 
 export function Footer() {
   const isExtraSmallScreen = useMediaQuery("(max-width: 450px)");
-  const navigate = useNavigatePreserveQuery();
   const switchNetwork = useSwitchNetwork();
   const isTestnet = useIsTestnet();
+  const location = useLocation();
+  const homeLink = {
+    pathname: "/",
+    search: location.search,
+    hash: location.hash,
+  };
 
   return (
     <FooterWrapper>
@@ -41,10 +46,10 @@ export function Footer() {
           alignItems: isExtraSmallScreen ? "center" : "inherit",
         }}>
         <CenteringBox>
-          <LinkWrapper sx={{ color: "#000" }} onClick={() => navigate("/")}>
+          <RouterLinkWrapper to={homeLink} style={{ color: "#000" }}>
             <img src={icon} alt="App icon" width={30} height={30} />
             <AppLogo>TON VERIFIER</AppLogo>
-          </LinkWrapper>
+          </RouterLinkWrapper>
         </CenteringBox>
         <SocialsContent>
           <HoverableIcon
