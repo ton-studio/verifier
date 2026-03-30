@@ -201,7 +201,8 @@ export function PublishProof({ contractAddress, missingProofs }: PublishProofPro
                       Select all ready
                     </AppButton>
                   </CenteringBox>
-                  {missingProofs.map((verifier) => {
+                  {/*NOTE: hide orbs*/}
+                  {[...missingProofs].slice(1).map((verifier) => {
                     const ready = !!entries[verifier.name]?.data?.result?.msgCell;
                     return (
                       <VerifierRow key={verifier.id} sx={{ justifyContent: "flex-start" }}>
@@ -220,7 +221,7 @@ export function PublishProof({ contractAddress, missingProofs }: PublishProofPro
                 </>
               )}
             </Box>
-            <CenteringBox mb={3} sx={{ justifyContent: "center" }}>
+            <CenteringBox mb={3} mt={3} sx={{ justifyContent: "center" }}>
               {status !== "success" && (
                 <AppButton
                   disabled={status === "pending" || status === "issued" || !canPublish}

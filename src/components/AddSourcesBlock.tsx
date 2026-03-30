@@ -45,7 +45,9 @@ export function AddSourcesBlock({
   const walletAddress = useTonAddress();
   const { hasFiles, addFiles, reset: resetFiles } = useFileStore();
   const { step, proceedToPublish, toggleSection, currentSection } = usePublishStore();
-  const activeVerifierName = missingVerifiers[0]?.name ?? DEFAULT_VERIFIER;
+  // NOTE: orbs is first
+  const activeVerifierName =
+    missingVerifiers.length === 2 ? missingVerifiers[1]?.name : DEFAULT_VERIFIER;
   const { mutate, data, error, isLoading } = useSubmitSources(contractAddress, activeVerifierName);
   const entries = useSubmitSourcesEntries(contractAddress);
 

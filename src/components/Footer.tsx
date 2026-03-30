@@ -13,7 +13,6 @@ import {
 import { AppLogo, LinkWrapper, RouterLinkWrapper } from "./TopBar.styled";
 import { Typography, useMediaQuery } from "@mui/material";
 import heart from "../assets/heart.svg";
-import orbsLogo from "../assets/orbs.svg";
 import telegram from "../assets/telegram.svg";
 import telegramHovered from "../assets/telegram-hover.svg";
 import github from "../assets/github-footer.svg";
@@ -60,7 +59,7 @@ export function Footer() {
           <HoverableIcon
             iconUrl={github}
             hoveredIconUrl={githubHovered}
-            link="https://github.com/orbs-network/ton-contract-verifier"
+            link="https://github.com/ton-studio/verifier"
           />
         </SocialsContent>
       </SocialsWrapper>
@@ -76,16 +75,6 @@ export function Footer() {
               <img src={heart} alt="Heart" width={12} height={12} />
             </CenteringBox>
             by
-            <CenteringBox mx={0.4}>
-              <img src={orbsLogo} alt="Orbs logo" width={12} height={12} />
-            </CenteringBox>
-            <FooterLink
-              sx={{ color: "#5E75E8" }}
-              target="_blank"
-              href="https://orbs.com/powered-by">
-              Orbs
-            </FooterLink>
-            &nbsp;and&nbsp;
             <FooterLink sx={{ color: "#5E75E8" }} target="_blank" href="https://tonstudio.io/">
               TON Studio
             </FooterLink>

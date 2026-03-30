@@ -14,7 +14,11 @@ const VerifierCard = ({ verifierId, config }: { verifierId: string; config: Veri
       value: <CopyHash value={verifierId} maxSize={36} />,
     },
     { title: "URL", value: config.url },
-    { title: "Admin", value: config.admin.toString(), showIcon: true },
+    {
+      title: "Admin",
+      value: <CopyHash value={config.admin.toString()} maxSize={64} />,
+      showIcon: true,
+    },
     { title: "Quorum", value: String(config.quorum) },
     {
       title: "Endpoints",
@@ -58,19 +62,15 @@ export function VerifierListBlock() {
         </Box>
       )}
       {hasVerifiers ? (
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "row",
-            flexWrap: "wrap",
-            gap: 2,
-          }}>
-          {verifiers.map(([id, config]) => (
-            <Box key={id} sx={{ minWidth: "200px", maxWidth: "500px" }}>
-              <VerifierCard verifierId={id} config={config} />
-            </Box>
-          ))}
-        </Box>
+        <>
+          {verifiers
+            .filter((i) => !i[1].name.includes("orbs"))
+            .map(([id, config]) => (
+              <Box key={id}>
+                <VerifierCard verifierId={id} config={config} />
+              </Box>
+            ))}
+        </>
       ) : (
         isEnabled &&
         !isLoading && (

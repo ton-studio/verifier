@@ -124,6 +124,13 @@ export class VerifierRegistry implements Contract {
         Dictionary.Values.BigUint(32),
       );
 
+      // NOTE: no name in lists of contracts, no source code for orbs contracts
+      // const name = slice.loadRef().beginParse().loadStringTail();
+      //
+      // if (name.includes('orbs')) {
+      //   return acc
+      // }
+
       const verifierId = `0x${id.toString(16).padStart(64, "0")}`;
 
       acc[verifierId] = {

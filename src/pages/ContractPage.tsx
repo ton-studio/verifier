@@ -88,6 +88,7 @@ function ContractPage() {
 
   const proofsLoaded = proofData !== undefined;
   const { data: verifierRegistry } = useLoadVerifierRegistryInfo();
+
   const anyOnchainProof = hasAnyOnchainProof(proofData);
   const missingProofs = getMissingOnchainProofs(proofData, verifierRegistry);
   const availableProof = getFirstAvailableProof(proofData);

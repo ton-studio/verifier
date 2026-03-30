@@ -44,22 +44,22 @@ const testnetVerifiers: Record<string, VerifierConfig> = {
   "verifier.ton.org": {
     backendUrls: ["https://verifier-testnet.tonstudio.io"],
   },
-  "orbs-testnet": {
-    backendUrls: ["https://ton-source-prod-testnet-1.herokuapp.com"],
-  },
+  // "orbs-testnet": {
+  //   backendUrls: ["https://ton-source-prod-testnet-1.herokuapp.com"],
+  // },
 };
 
 const mainnetVerifiers: Record<string, VerifierConfig> = {
   "verifier.ton.org": {
     backendUrls: ["https://verifier-mainnet.tonstudio.io"],
   },
-  "orbs.com": {
-    backendUrls: [
-      "https://ton-source-prod-1.herokuapp.com",
-      "https://ton-source-prod-2.herokuapp.com",
-      "https://ton-source-prod-3.herokuapp.com",
-    ],
-  },
+  // "orbs.com": {
+  //   backendUrls: [
+  //     "https://ton-source-prod-1.herokuapp.com",
+  //     "https://ton-source-prod-2.herokuapp.com",
+  //     "https://ton-source-prod-3.herokuapp.com",
+  //   ],
+  // },
 };
 
 export function getBackends(verifier: string, isTestnet: boolean): Readonly<string[]> {
@@ -140,7 +140,7 @@ export function useSubmitSourcesEntries(contractAddress?: string | null) {
 type SubmitSourcesMutationResult = {
   result: VerifyResult & { msgCell?: Buffer };
   hints: Hints[];
-  queryId?: number;
+  queryId?: bigint;
   status: string | null;
 };
 
@@ -314,7 +314,7 @@ export function useSubmitSources(
       updateCompileStatus(`Compile successful. Collected ${totalSignatures}/${totalSignatures}`);
 
       const s = Cell.fromBoc(Buffer.from(msgCell!))[0].beginParse();
-      queryId = s.loadUint(64);
+      queryId = s.loadUintBig(64);
     }
 
     return {

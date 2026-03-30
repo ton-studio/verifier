@@ -1,8 +1,4 @@
-const IPFS_GATEWAYS = [
-  "https://ipfs.ton.org/ipfs/",
-  "https://files.orbs.network/ipfs/",
-  "https://gateway.pinata.cloud/ipfs/",
-] as const;
+const IPFS_GATEWAYS = ["https://ipfs.ton.org/ipfs/", "https://gateway.pinata.cloud/ipfs/"] as const;
 
 const FALLBACK_GATEWAY_INDEX = IPFS_GATEWAYS.length - 1;
 

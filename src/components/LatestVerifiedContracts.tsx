@@ -6,7 +6,8 @@ import { CopyHash } from "./CopyHash";
 import { Link as RouterLink, useLocation } from "react-router-dom";
 
 const Contract = styled(RouterLink)(({ theme }) => ({
-  display: "block",
+  display: "flex",
+  flexDirection: "column",
   background: "white",
   padding: "16px 20px",
   borderRadius: 10,
@@ -15,9 +16,7 @@ const Contract = styled(RouterLink)(({ theme }) => ({
   cursor: "pointer",
   textDecoration: "none",
   color: "inherit",
-  [theme.breakpoints.down("sm")]: {
-    width: 280,
-  },
+  overflow: "hidden",
 }));
 
 const ContractsWrapper = styled(Box)(({ theme }) => ({
@@ -27,17 +26,18 @@ const ContractsWrapper = styled(Box)(({ theme }) => ({
   margin: "0 auto",
 }));
 
-const ContractsList = styled(Box)({
-  display: "flex",
-  flexDirection: "row",
-  flexWrap: "wrap",
+const ContractsList = styled(Box)(({ theme }) => ({
+  display: "grid",
+  gridTemplateColumns: "repeat(2, 1fr)",
   gap: 24,
   margin: "0 auto",
-  justifyContent: "left",
-  overflow: "auto",
+  overflow: "hidden",
   marginTop: 24,
   WebkitTextSizeAdjust: "100%",
-});
+  [theme.breakpoints.down("sm")]: {
+    gridTemplateColumns: "1fr",
+  },
+}));
 
 const AddressText = styled(Box)({
   overflow: "hidden",
@@ -82,14 +82,14 @@ export function LatestVerifiedContracts() {
               width={400 + width}
               height={70}></Skeleton>
           ))}
-        {latestVerifiedContracts?.map((contract) => {
+        {latestVerifiedContracts?.map((contract, j) => {
           const verifierName = contract.verifierId
             ? verifierRegistry?.["0x" + contract.verifierId]?.name
             : undefined;
           const verifiedDate =
             contract.timestamp && new Date(contract.timestamp * 1000).toLocaleDateString();
           return (
-            <Contract key={contract.address} to={createContractLink(contract.address)}>
+            <Contract key={contract.address + j} to={createContractLink(contract.address)}>
               <AddressText>{contract.address}</AddressText>
               <div style={{ display: "flex", alignItems: "center", marginTop: 6.5 }}>
                 <Typography
