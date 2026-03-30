@@ -103,7 +103,8 @@ export function CompilerBlock() {
     if (!verifierEntries.length) {
       return [];
     }
-    return verifierEntries.map(([id, config]) => {
+    // NOTE: remove orbs if no source
+    const allRows = verifierEntries.map(([id, config]) => {
       const proof = proofs?.get(id);
       const hasProof = !!proof?.hasOnchainProof;
       const compilerInfo = formatCompilerInfo(proof);
@@ -120,6 +121,16 @@ export function CompilerBlock() {
         hasProof,
       };
     });
+
+    const isOrbs = (row: RowData) => row.name.toLowerCase().includes("orbs");
+    const proofRows = allRows.filter((row) => row.hasProof);
+    const hasOnlyOrbsProof = proofRows.length > 0 && proofRows.every(isOrbs);
+
+    if (hasOnlyOrbsProof) {
+      return allRows;
+    }
+
+    return allRows.filter((row) => row.hasProof && !isOrbs(row));
   }, [verifierEntries, proofs]);
 
   const hasVerifiers = verifierEntries.length > 0;
