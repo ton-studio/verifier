@@ -115,22 +115,24 @@ function ContractSourceCode() {
       : proofVerifiers.filter(({ id, config }) => !isOrbs(config.name || id));
 
     verifiersForTabs.forEach(({ id, config, proof, getterKey, domIds }) => {
-      const labelSuffix = config.name || id;
-      initialTabs.push({
-        id: `sources-${id}`,
-        label: `Sources (${labelSuffix})`,
-        type: "sources",
-        proof,
-        domIds,
-        getterKey,
-      });
-      initialTabs.push({
-        id: `getters-${id}`,
-        label: `Getters (${labelSuffix})`,
-        type: "getters",
-        proof,
-        getterKey,
-      });
+      if (!!proof) {
+        const labelSuffix = config.name || id;
+        initialTabs.push({
+          id: `sources-${id}`,
+          label: `Sources (${labelSuffix})`,
+          type: "sources",
+          proof: proof,
+          domIds,
+          getterKey,
+        });
+        initialTabs.push({
+          id: `getters-${id}`,
+          label: `Getters (${labelSuffix})`,
+          type: "getters",
+          proof: proof,
+          getterKey,
+        });
+      }
     });
     return initialTabs;
   }, [verifierProofs]);

@@ -9,6 +9,7 @@
     "build": "tsc && vite build && cp dist/index.html dist/404.html",
     "preview": "vite preview",
     "prepare": "husky install",
+    "test": "tsc -p tsconfig.json --noemit",
     "analyze": "source-map-explorer 'dist/assets/*.js' --no-border-checks"
   },
   "overrides": {
