@@ -104,10 +104,17 @@ function ContractSourceCode() {
     const initialTabs: TabConfig[] = [
       { id: "disassembled", label: "Disassembled", type: "disassembled" },
     ];
-    verifierProofs.forEach(({ id, config, proof, getterKey, domIds }) => {
-      if (!proof?.hasOnchainProof) {
-        return;
-      }
+
+    const isOrbs = (name: string) => name.toLowerCase().includes("orbs");
+    const proofVerifiers = verifierProofs.filter(({ proof }) => !!proof?.hasOnchainProof);
+    const hasOnlyOrbsProof =
+      proofVerifiers.length > 0 &&
+      proofVerifiers.every(({ id, config }) => isOrbs(config.name || id));
+    const verifiersForTabs = hasOnlyOrbsProof
+      ? proofVerifiers
+      : proofVerifiers.filter(({ id, config }) => !isOrbs(config.name || id));
+
+    verifiersForTabs.forEach(({ id, config, proof, getterKey, domIds }) => {
       const labelSuffix = config.name || id;
       initialTabs.push({
         id: `sources-${id}`,
